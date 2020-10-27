@@ -47,6 +47,10 @@
   (let [[dx dy] (get *coords* direction)]
     [(+ dx (:row cell)) (+ dy (:column cell))]))
 
+(defn cell-has-neighbour [grid cell direction]
+  (let [[x y] (direction-from-cell cell direction)]
+    (not (nil? (get-cell grid x y)))))
+
 (defn get-direction [from to]
   "find the direction between two cells"
   (let [dx (- (:row to) (:row from))
