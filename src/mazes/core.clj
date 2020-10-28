@@ -30,9 +30,9 @@
   ([x y] (clojure.string/join "," [x y]))
   ([cell] (grid-key (:row cell) (:column cell))))
 
-(defn iter-grid [grid f]
+(defn iter-grid [grid]
   "ITerate through grid by row then column, calling f at each cell"
-  (for [x (range (:rows grid)) y (range (:cols grid))] (f (get-cell grid x y))))
+  (vec (for [x (range (:rows grid)) y (range (:cols grid))] (get-cell grid x y))))
 
 (defn make-cell [row column]
   "Creates cell using row and column positions"
@@ -42,6 +42,12 @@
   "Return the cell at x,y in grid"
   (get-in grid [:cells (grid-key x y)]))
 
+(defn get-row [grid x]
+  (vec (for [y (range (:cols grid))] (get-cell grid x y))))
+
+(defn get-col [grid y]
+  (vec (for [x (range (:rows grid))] (get-cell grid x y))))
+
 (defn direction-from-cell [cell direction]
   "get coordinate of direction from a given cell"
   (let [[dx dy] (get *coords* direction)]
@@ -50,6 +56,11 @@
 (defn cell-has-neighbour [grid cell direction]
   (let [[x y] (direction-from-cell cell direction)]
     (not (nil? (get-cell grid x y)))))
+
+(defn cell-at-dir [grid cell direction]
+  "Get the cell at direction"
+  (let [[x y] (direction-from-cell cell direction)]
+    (get-cell grid x y)))
 
 (defn get-direction [from to]
   "find the direction between two cells"
@@ -71,3 +82,43 @@
      (cond-> grid
        (not (nil? direction)) (update-link src direction)
        (and bidirectional (not (nil? direction))) (update-link dest reverse)))))
+
+(defn get-neighbours [grid cell directions]
+  "Get all cells neighbouring cell at specified directions"
+  (reduce (fn [neighbours dir] (if (cell-has-neighbour grid cell dir)
+                                 (conj neighbours (cell-at-dir grid cell dir))
+                                 neighbours))
+          []
+          directions))
+
+(defn binary-tree [grid]
+  (reduce (fn [grid cell]
+            (let [neighbours (get-neighbours grid cell '(:north :east))]
+              (if (not (empty? neighbours))
+                (link-cells grid cell (rand-nth neighbours))
+                grid)))
+          grid
+          (iter-grid grid)))
+
+(defn str-row [row]
+  (str (str-row-upper row) (str-row-lower row)))
+
+(defn str-grid [grid]
+  (str "+" (apply str (repeat (:cols grid) "---+")) "\n"
+       (str (clojure.string/join "" (map (fn [x] (str-row (get-row grid x))) (range (:rows grid)))))))
+       ;; (map (fn [r]
+       ;;        (clojure.string/join "" '((str-row-upper (get-row grid r)) (str-row-lower (get-row grid r)))))
+       ;;      (range (:rows grid)))))
+
+(defn str-row-upper [row]
+  (str "|"
+       (str (clojure.string/join "" (map (fn [cell] (str "   " (if (contains? (:links cell) :east) " " "|")))
+                                         row)))
+       "\n"))
+
+(defn str-row-lower [row]
+  (str "+"
+       (str (clojure.string/join "" (map (fn [cell]
+                                           (str (if (contains? (:links cell) :south) "   " "---") "+"))
+                                         row)))
+       "\n"))
