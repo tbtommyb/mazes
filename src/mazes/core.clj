@@ -15,32 +15,32 @@
 
 (defn all-coords-for [rows cols]
   "Generate every coordinate for grid of size rows by cols"
-  (for [x (range rows) y (range cols)] [x y]))
+  (for [x (range cols) y (range rows)] [x y]))
+
+(defn grid-key
+  "Create the key to look up a cell in grid"
+  ([x y] (clojure.string/join "," [x y]))
+  ([cell] (grid-key (:column cell) (:row cell))))
 
 (defn init-grid [rows cols f]
   "initialise a vector of length cols * rows, calling (f x y) for each element"
   {:rows rows
    :cols cols
-   :cells (reduce (fn [grid [x y]] (assoc grid (grid-key x y) (f x y)))
+   :cells (reduce (fn [grid [x y]] (assoc grid (grid-key x y) (f y x)))
           {}
           (all-coords-for rows cols))})
-
-(defn grid-key
-  "Create the key to look up a cell in grid"
-  ([x y] (clojure.string/join "," [x y]))
-  ([cell] (grid-key (:row cell) (:column cell))))
-
-(defn iter-grid [grid]
-  "ITerate through grid by row then column, calling f at each cell"
-  (vec (for [x (range (:rows grid)) y (range (:cols grid))] (get-cell grid x y))))
-
-(defn make-cell [row column]
-  "Creates cell using row and column positions"
-  {:row row :column column :links #{}})
 
 (defn get-cell [grid x y]
   "Return the cell at x,y in grid"
   (get-in grid [:cells (grid-key x y)]))
+
+(defn iter-grid [grid]
+  "ITerate through grid by row then column, calling f at each cell"
+  (vec (for [x (range (:cols grid)) y (range (:rows grid))] (get-cell grid x y))))
+
+(defn make-cell [row column]
+  "Creates cell using row and column positions"
+  {:row row :column column :links #{}})
 
 (defn get-row [grid x]
   (vec (for [y (range (:cols grid))] (get-cell grid x y))))
@@ -51,7 +51,7 @@
 (defn direction-from-cell [cell direction]
   "get coordinate of direction from a given cell"
   (let [[dx dy] (get *coords* direction)]
-    [(+ dx (:row cell)) (+ dy (:column cell))]))
+    [(+ dx (:column cell)) (+ dy (:row cell))]))
 
 (defn cell-has-neighbour [grid cell direction]
   (let [[x y] (direction-from-cell cell direction)]
@@ -81,7 +81,7 @@
          reverse (get-direction dest src)]
      (cond-> grid
        (not (nil? direction)) (update-link src direction)
-       (and bidirectional (not (nil? direction))) (update-link dest reverse)))))
+       (and bidirectional (not (nil? reverse))) (update-link dest reverse)))))
 
 (defn get-neighbours [grid cell directions]
   "Get all cells neighbouring cell at specified directions"
@@ -100,25 +100,25 @@
           grid
           (iter-grid grid)))
 
-(defn str-row [row]
-  (str (str-row-upper row) (str-row-lower row)))
-
 (defn str-grid [grid]
   (str "+" (apply str (repeat (:cols grid) "---+")) "\n"
-       (str (clojure.string/join "" (map (fn [x] (str-row (get-row grid x))) (range (:rows grid)))))))
-       ;; (map (fn [r]
-       ;;        (clojure.string/join "" '((str-row-upper (get-row grid r)) (str-row-lower (get-row grid r)))))
-       ;;      (range (:rows grid)))))
+       (str (clojure.string/join "" (map (fn [x] (str-row (get-row grid x))) (reverse (range (:rows grid))))))))
 
+;; TODO: print coords in each cell so I can see if they are in the correct order
 (defn str-row-upper [row]
   (str "|"
-       (str (clojure.string/join "" (map (fn [cell] (str "   " (if (contains? (:links cell) :east) " " "|")))
+       (str (clojure.string/join "" (map (fn [cell] (str "   "
+                                                     (if (contains? (:links cell) :east) " " "|")))
                                          row)))
        "\n"))
 
 (defn str-row-lower [row]
   (str "+"
        (str (clojure.string/join "" (map (fn [cell]
-                                           (str (if (contains? (:links cell) :south) "   " "---") "+"))
+                                           (str (if (contains? (:links cell) :south) "   " "---")
+                                                "+"))
                                          row)))
        "\n"))
+
+(defn str-row [row]
+  (str (str-row-upper row) (str-row-lower row)))
