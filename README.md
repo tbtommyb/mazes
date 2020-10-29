@@ -5,7 +5,7 @@ A Clojure library designed to create mazes, based on [Mazes for Programmers](htt
 ## Usage
 
 ```
-(print (str-grid (binary-tree (init-grid 10 10 make-cell))))
+(print (str-grid (binary-tree (init-grid 10 10))))
 
 +---+---+---+---+---+---+---+---+---+---+
 |                                       |

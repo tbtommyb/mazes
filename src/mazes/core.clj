@@ -1,9 +1,5 @@
-(ns mazes.core)
-
-(defn foo
-  "I don't do a whole lot."
-  [x]
-  (println x "Hello, World!"))
+(ns mazes.core
+  (:require [clojure.string :as str]))
 
 (def *directions* [:north :west :south :east])
 
@@ -19,14 +15,18 @@
 
 (defn grid-key
   "Create the key to look up a cell in grid"
-  ([x y] (clojure.string/join "," [x y]))
+  ([x y] (str/join "," [x y]))
   ([cell] (grid-key (:column cell) (:row cell))))
 
-(defn init-grid [rows cols f]
-  "initialise a vector of length cols * rows, calling (f x y) for each element"
+(defn make-cell [row column]
+  "Creates cell using row and column positions"
+  {:row row :column column :links #{}})
+
+(defn init-grid [rows cols]
+  "initialise a vector of length cols * rows, calling (make-cell x y) for each element"
   {:rows rows
    :cols cols
-   :cells (reduce (fn [grid [x y]] (assoc grid (grid-key x y) (f y x)))
+   :cells (reduce (fn [grid [x y]] (assoc grid (grid-key x y) (make-cell y x)))
           {}
           (all-coords-for rows cols))})
 
@@ -37,10 +37,6 @@
 (defn iter-grid [grid]
   "ITerate through grid by row then column, calling f at each cell"
   (vec (for [x (range (:cols grid)) y (range (:rows grid))] (get-cell grid x y))))
-
-(defn make-cell [row column]
-  "Creates cell using row and column positions"
-  {:row row :column column :links #{}})
 
 (defn get-row [grid x]
   (vec (for [y (range (:cols grid))] (get-cell grid x y))))
@@ -91,6 +87,29 @@
           []
           directions))
 
+(defn str-row-upper [row]
+  (str "|"
+       (str (str/join
+             ""
+             (map (fn [cell] (str "   " (if (contains? (:links cell) :east) " " "|")))
+                  row)))
+       "\n"))
+
+(defn str-row-lower [row]
+  (str "+"
+       (str (str/join
+             ""
+             (map (fn [cell] (str (if (contains? (:links cell) :south) "   " "---") "+"))
+                  row)))
+       "\n"))
+
+(defn str-row [row]
+  (str (str-row-upper row) (str-row-lower row)))
+
+(defn str-grid [grid]
+  (str "+" (apply str (repeat (:cols grid) "---+")) "\n"
+       (str (str/join "" (map (fn [x] (str-row (get-row grid x))) (reverse (range (:rows grid))))))))
+
 (defn binary-tree [grid]
   (reduce (fn [grid cell]
             (let [neighbours (get-neighbours grid cell '(:north :east))]
@@ -99,26 +118,3 @@
                 grid)))
           grid
           (iter-grid grid)))
-
-(defn str-grid [grid]
-  (str "+" (apply str (repeat (:cols grid) "---+")) "\n"
-       (str (clojure.string/join "" (map (fn [x] (str-row (get-row grid x))) (reverse (range (:rows grid))))))))
-
-;; TODO: print coords in each cell so I can see if they are in the correct order
-(defn str-row-upper [row]
-  (str "|"
-       (str (clojure.string/join "" (map (fn [cell] (str "   "
-                                                     (if (contains? (:links cell) :east) " " "|")))
-                                         row)))
-       "\n"))
-
-(defn str-row-lower [row]
-  (str "+"
-       (str (clojure.string/join "" (map (fn [cell]
-                                           (str (if (contains? (:links cell) :south) "   " "---")
-                                                "+"))
-                                         row)))
-       "\n"))
-
-(defn str-row [row]
-  (str (str-row-upper row) (str-row-lower row)))
