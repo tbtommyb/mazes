@@ -128,8 +128,27 @@
       (and (cell-has-neighbour grid cell :north)
            (even? (rand-nth '(0 1))))))
 
+(defn take-while+
+  "Take while pred is true, plus the following element"
+  [pred coll]
+  (lazy-seq
+    (when-let [[f & r] (seq coll)]
+      (if (pred f)
+        (cons f (take-while+ pred r))
+        [f]))))
+
+(defn partition-by+
+  "Partition by (f elem), including elem in current partition"
+  [f coll]
+  (lazy-seq
+   (when-let [s (seq coll)]
+     (let [fst (first s)
+           fv (f fst)
+           run (cons fst (take-while+ #(= fv (f %)) (next s)))]
+       (cons run (partition-by f (lazy-seq (drop (count run) s))))))))
+
 (defn generate-runs [grid row]
-  (partition-by #(should-close-out grid %) row))
+  (partition-by+ #(should-close-out grid %) row))
 
 (defn link-random-north [grid run]
   (let [rnd (rand-nth run)]
