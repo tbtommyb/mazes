@@ -5,7 +5,7 @@ A Clojure library designed to create mazes, based on [Mazes for Programmers](htt
 ## Usage
 
 ```
-mazes.core> (print (str-grid (binary-tree (init-grid 10 10))))
+mazes.core> (pr/ascii-print (algo/binary-tree grid))
 +---+---+---+---+---+---+---+---+---+---+
 |                                       |
 +   +---+---+   +   +   +   +---+   +   +
@@ -28,8 +28,7 @@ mazes.core> (print (str-grid (binary-tree (init-grid 10 10))))
 |   |   |                       |   |   |
 +---+---+---+---+---+---+---+---+---+---+
 
-
-mazes.core> (print (str-grid (sidewinder (init-grid 10 10))))
+mazes.core> (pr/ascii-print (algo/sidewinder grid))
 +---+---+---+---+---+---+---+---+---+---+
 |                                       |
 +---+   +---+   +   +---+   +---+   +---+
