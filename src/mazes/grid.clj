@@ -23,7 +23,7 @@
   "Creates cell using row and column positions"
   {:row row :column column :links #{}})
 
-(defn init-grid [rows cols]
+(defn init [rows cols]
   "initialise a vector of length cols * rows, calling (make-cell x y) for each element"
   {:rows rows
    :cols cols
