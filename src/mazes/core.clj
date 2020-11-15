@@ -5,3 +5,5 @@
    [mazes.algorithms :as algo]))
 
 (def grid (gr/init-grid 10 10))
+
+(pr/svg-grid grid)

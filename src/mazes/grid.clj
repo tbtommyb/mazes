@@ -58,6 +58,9 @@
   (let [[x y] (direction-from-cell cell direction)]
     (not (nil? (get-cell grid x y)))))
 
+(defn cell-has-link? [cell direction]
+  (contains? (:links cell) direction))
+
 (defn cell-at-dir [grid cell direction]
   "Get the cell at direction"
   (let [[x y] (direction-from-cell cell direction)]
