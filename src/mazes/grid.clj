@@ -36,7 +36,7 @@
   (get-in grid [:cells (grid-key x y)]))
 
 (defn iter-grid [grid]
-  "ITerate through grid by row then column, calling f at each cell"
+  "ITerate through grid by row then column, returning each cell"
   (vec (for [x (range (:cols grid)) y (range (:rows grid))] (get-cell grid x y))))
 
 (defn get-row [grid y]
@@ -87,10 +87,24 @@
        (not (nil? direction)) (update-link src direction)
        (and bidirectional (not (nil? reverse))) (update-link dest reverse)))))
 
-(defn get-neighbours [grid cell directions]
+(defn get-neighbour [grid cell directions]
   "Get all cells neighbouring cell at specified directions"
   (reduce (fn [neighbours dir] (if (cell-has-neighbour grid cell dir)
                                  (conj neighbours (cell-at-dir grid cell dir))
                                  neighbours))
           []
           directions))
+
+(defn get-neighbours [grid cell]
+  (get-neighbour grid cell [:north :east :south :west]))
+
+(defn get-link-cell [grid cell directions]
+  "Get all linked cell at specified directions"
+  (reduce (fn [links dir] (if (cell-has-link? cell dir)
+                                 (conj links (cell-at-dir grid cell dir))
+                                 links))
+          []
+          directions))
+
+(defn get-linked-cells [grid cell]
+  (get-link-cell grid cell [:north :east :south :west]))

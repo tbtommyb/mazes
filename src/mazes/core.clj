@@ -2,8 +2,12 @@
   (:require
    [mazes.grid :as gr]
    [mazes.printer :as pr]
+   [mazes.distances :as dist]
    [mazes.algorithms :as algo]))
 
-(def grid (gr/init-grid 10 10))
+(def grid (gr/init 4 4))
+(def maze (algo/sidewinder grid))
+(def distances (dist/dijkstra maze 0 0))
 
-(pr/svg-grid grid)
+(pr/ascii-distances maze distances)
+;; (pr/svg-grid grid)

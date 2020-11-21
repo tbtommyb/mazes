@@ -4,7 +4,7 @@
 
 (defn binary-tree [grid]
   (reduce (fn [grid cell]
-            (let [neighbours (gr/get-neighbours grid cell '(:north :east))]
+            (let [neighbours (gr/get-neighbour grid cell '(:north :east))]
               (if (not (empty? neighbours))
                 (gr/link-cells grid cell (rand-nth neighbours))
                 grid)))

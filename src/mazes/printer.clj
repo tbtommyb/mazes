@@ -29,15 +29,6 @@
   (str "+" (apply str (repeat (:cols grid) "---+")) "\n"
        (str (str/join "" (map (fn [x] (str-row (gr/get-row grid x))) (reverse (range (:rows grid))))))))
 
-(defn ascii [grid]
-  (print (str-grid grid)))
-
-(defn png [grid]
-  (io/render-png (svg-print grid) "output.png"))
-
-(defn svg [grid]
-  (io/render-svg (svg-print grid) "output.svg"))
-
 (def *cell-size* 50)
 
 (defn svg-print-cell [height cell]
@@ -57,3 +48,41 @@
      [:rect {:fill :white}
       [0 0] [width height]]
      (map (partial svg-print-cell height) (gr/iter-grid grid))]))
+
+(defn str-row-upper-distances [row distances]
+  (str "|"
+       (str/join ""
+                 (map (fn [cell] (str " "
+                                      (str (get distances (gr/grid-key cell)) " ")
+                                      (str (if (contains? (:links cell) :east) " " "|"))))
+                        row))
+       "\n"))
+
+(defn str-row-lower-distances [row distances]
+  (str "+"
+       (str/join
+             ""
+             (map (fn [cell] (str (if (contains? (:links cell) :south)
+                                    (str "   ")
+                                    "---") "+"))
+                  row))
+       "\n"))
+
+(defn str-row-distances [row distances]
+  (str (str-row-upper-distances row distances) (str-row-lower-distances row distances)))
+
+(defn str-grid-distances [grid distances]
+  (str "+" (apply str (repeat (:cols grid) "---+")) "\n"
+       (str (str/join "" (map (fn [x] (str-row-distances (gr/get-row grid x) distances)) (reverse (range (:rows grid))))))))
+
+(defn ascii-distances [grid distances]
+  (print (str-grid-distances grid distances)))
+
+(defn ascii [grid]
+  (print (str-grid grid)))
+
+(defn png [grid]
+  (io/render-png (svg-print grid) "output.png"))
+
+(defn svg [grid]
+  (io/render-svg (svg-print grid) "output.svg"))
