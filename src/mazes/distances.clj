@@ -26,5 +26,5 @@
 ;; TODO: validate x and y
 (defn dijkstra [grid x y]
   (-> (init grid)
-      (set-distance (gr/get-cell grid 0 0) 0)
+      (set-distance (gr/get-cell grid x y) 0)
       (iter-dijkstra grid (gr/get-cell grid x y) 1)))
