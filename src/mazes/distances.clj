@@ -21,9 +21,7 @@
     distances))
 
 (defn iter-dijkstra [distances grid current distance]
-  (if (nil? current)
-    distances
-    (reduce #(update-dist %1 %2 distance grid) distances (gr/get-linked-cells grid current))))
+  (reduce #(update-dist %1 %2 distance grid) distances (gr/get-linked-cells grid current)))
 
 ;; TODO: validate x and y
 (defn dijkstra [grid x y]

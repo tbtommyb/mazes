@@ -49,11 +49,12 @@
       [0 0] [width height]]
      (map (partial svg-print-cell height) (gr/iter-grid grid))]))
 
+;; TODO: tidy up and remove duplication
 (defn str-row-upper-distances [row distances]
   (str "|"
        (str/join ""
                  (map (fn [cell] (str " "
-                                      (str (get distances (gr/grid-key cell)) " ")
+                                      (str (Integer/toString (get distances (gr/grid-key cell)) 36) " ")
                                       (str (if (contains? (:links cell) :east) " " "|"))))
                         row))
        "\n"))
