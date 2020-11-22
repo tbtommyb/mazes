@@ -5,9 +5,9 @@
    [mazes.distances :as dist]
    [mazes.algorithms :as algo]))
 
-(def grid (gr/init 10 10))
+(def grid (gr/init 3 3))
 (def maze (algo/sidewinder grid))
 (def distances (dist/dijkstra maze 0 0))
 
-(pr/ascii-distances maze distances)
+;; (pr/ascii-distances maze distances)
 ;; (pr/svg-grid grid)

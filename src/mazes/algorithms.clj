@@ -1,19 +1,20 @@
 (ns mazes.algorithms
   (:require
-   [mazes.grid :as gr]))
+   [mazes.grid :as gr]
+   [clojure.data.generators :as gen]))
 
 (defn binary-tree [grid]
   (reduce (fn [grid cell]
             (let [neighbours (gr/get-neighbour grid cell '(:north :east))]
               (if (not (empty? neighbours))
-                (gr/link-cells grid cell (rand-nth neighbours))
+                (gr/link-cells grid cell (gen/rand-nth neighbours))
                 grid)))
           grid
           (gr/iter-grid grid)))
 
 ;; TODO: utility (link-cell-dir grid cell :direction)
 (defn link-random-north [grid run]
-  (let [random-cell (rand-nth run)]
+  (let [random-cell (gen/rand-nth run)]
     (if (gr/cell-has-neighbour grid random-cell :north)
       (gr/link-cells grid random-cell (gr/cell-at-dir grid random-cell :north))
       grid)))
@@ -30,7 +31,7 @@
 
 (defn should-close-out [grid cell]
   (and (gr/cell-has-neighbour grid cell :north)
-       (even? (rand-nth '(0 1)))))
+       (even? (gen/rand-nth '(0 1)))))
 
 (defn generate-runs [grid row]
   (partition-by #(should-close-out grid %) row))

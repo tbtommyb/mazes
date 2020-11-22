@@ -17,7 +17,7 @@
     <url>https://github.com/tbtommyb/mazes</url>
     <connection>scm:git:git://github.com/tbtommyb/mazes.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/tbtommyb/mazes.git</developerConnection>
-    <tag>08185b5a5e8492738dd3cc4d9537340e6571d0ab</tag>
+    <tag>2f26e4900e617a123479dbede8bace7e5302f339</tag>
   </scm>
   <build>
     <sourceDirectory>src</sourceDirectory>
@@ -66,6 +66,11 @@
       <groupId>org.clojure</groupId>
       <artifactId>clojure</artifactId>
       <version>1.10.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.clojure</groupId>
+      <artifactId>data.generators</artifactId>
+      <version>1.0.0</version>
     </dependency>
     <dependency>
       <groupId>dali</groupId>
