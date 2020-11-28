@@ -2,4 +2,3 @@
 output.png
 output.svg
 .lein-failures
-target/*

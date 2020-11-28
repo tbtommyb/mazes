@@ -2,10 +2,10 @@
   (:require
    [clojure.string :as str]))
 
-(def *directions* [:north :west :south :east])
+(def directions [:north :west :south :east])
 
-(def *coords*
-  (zipmap *directions* [[0 1]
+(def coords
+  (zipmap directions [[0 1]
                        [-1 0]
                        [0 -1]
                        [1 0]]))
@@ -19,7 +19,7 @@
   ([x y] (str/join "," [x y]))
   ([cell] (grid-key (:column cell) (:row cell))))
 
-(defn make-cell [row column]
+(defn make-cell [column row]
   "Creates cell using row and column positions"
   {:row row :column column :links #{}})
 
@@ -27,7 +27,7 @@
   "initialise a vector of length cols * rows, calling (make-cell x y) for each element"
   {:rows rows
    :cols cols
-   :cells (reduce (fn [grid [x y]] (assoc grid (grid-key x y) (make-cell y x)))
+   :cells (reduce (fn [grid [x y]] (assoc grid (grid-key x y) (make-cell x y)))
           {}
           (all-coords-for rows cols))})
 
@@ -51,10 +51,10 @@
 
 (defn direction-from-cell [cell direction]
   "get coordinate of direction from a given cell"
-  (let [[dx dy] (get *coords* direction)]
+  (let [[dx dy] (get coords direction)]
     [(+ dx (:column cell)) (+ dy (:row cell))]))
 
-(defn cell-has-neighbour [grid cell direction]
+(defn cell-has-neighbour? [grid cell direction]
   (let [[x y] (direction-from-cell cell direction)]
     (not (nil? (get-cell grid x y)))))
 
@@ -66,12 +66,12 @@
   (let [[x y] (direction-from-cell cell direction)]
     (get-cell grid x y)))
 
-(defn get-direction [from to]
+(defn direction-between [from to]
   "find the direction between two cells"
   (let [dy (- (:row to) (:row from))
         dx (- (:column to) (:column from))]
     (first (map first
-      (filter (fn [[k, [x, y]]] (and (= x dx) (= y dy))) *coords*)))))
+      (filter (fn [[k, [x, y]]] (and (= x dx) (= y dy))) coords)))))
 
 (defn update-link [grid cell dir]
   "Add dir to cell links"
@@ -81,15 +81,15 @@
   "Record a link between two cells"
   ([grid, src, dest] (link-cells grid src dest true))
   ([grid, src, dest, bidirectional]
-   (let [direction (get-direction src dest)
-         reverse (get-direction dest src)]
+   (let [direction (direction-between src dest)
+         reverse (direction-between dest src)]
      (cond-> grid
        (not (nil? direction)) (update-link src direction)
        (and bidirectional (not (nil? reverse))) (update-link dest reverse)))))
 
 (defn get-neighbour [grid cell directions]
   "Get all cells neighbouring cell at specified directions"
-  (reduce (fn [neighbours dir] (if (cell-has-neighbour grid cell dir)
+  (reduce (fn [neighbours dir] (if (cell-has-neighbour? grid cell dir)
                                  (conj neighbours (cell-at-dir grid cell dir))
                                  neighbours))
           []
