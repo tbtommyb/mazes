@@ -27,23 +27,23 @@
 
 (defn str-grid [grid]
   (str "+" (apply str (repeat (:cols grid) "---+")) "\n"
-       (str (str/join "" (map (fn [x] (str-row (gr/get-row grid x))) (reverse (range (:rows grid))))))))
+       (str (str/join "" (map (fn [x] (str-row (gr/iter-row grid x))) (reverse (range (:rows grid))))))))
 
-(def *cell-size* 50)
+(def cell-size 50)
 
 (defn svg-print-cell [height cell]
   (let [link? (partial gr/cell-has-link? cell)
-        x1 (* *cell-size* (:column cell))
-        y1 (- height (* *cell-size* (:row cell)))
-        x2 (* *cell-size* (+ 1 (:column cell)))
-        y2 (- height (* *cell-size* (+ 1 (:row cell))))]
+        x1 (* cell-size (:column cell))
+        y1 (- height (* cell-size (:row cell)))
+        x2 (* cell-size (+ 1 (:column cell)))
+        y2 (- height (* cell-size (+ 1 (:row cell))))]
     [:dali/align {:axis :left}
      [:line {:stroke (if (link? :south) :white :black)} [x1 y1] [x2 y1]]
      [:line {:stroke (if (link? :west) :white :black)} [x1 y1] [x1 y2]]]))
 
 (defn svg-print [grid]
-  (let [width (* (:cols grid) *cell-size*)
-        height (* (:rows grid) *cell-size*)]
+  (let [width (* (:cols grid) cell-size)
+        height (* (:rows grid) cell-size)]
     [:dali/page {:width width :height height}
      [:rect {:fill :white}
       [0 0] [width height]]
@@ -74,7 +74,7 @@
 
 (defn str-grid-distances [grid distances]
   (str "+" (apply str (repeat (:cols grid) "---+")) "\n"
-       (str (str/join "" (map (fn [x] (str-row-distances (gr/get-row grid x) distances)) (reverse (range (:rows grid))))))))
+       (str (str/join "" (map (fn [x] (str-row-distances (gr/iter-row grid x) distances)) (reverse (range (:rows grid))))))))
 
 (defn ascii-distances [grid distances]
   (print (str-grid-distances grid distances)))

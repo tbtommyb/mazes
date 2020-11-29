@@ -39,15 +39,15 @@
   "ITerate through grid by row then column, returning each cell"
   (vec (for [x (range (:cols grid)) y (range (:rows grid))] (get-cell grid x y))))
 
-(defn get-row [grid y]
+(defn iter-row [grid y]
   (vec (for [x (range (:cols grid))] (get-cell grid x y))))
 
-(defn get-col [grid x]
+(defn iter-col [grid x]
   (vec (for [y (range (:rows grid))] (get-cell grid x y))))
 
 (defn iter-rows [grid]
   "Create a vector of grid rows"
-  (vec (for [y (range (:rows grid))] (get-row grid y))))
+  (vec (for [y (range (:rows grid))] (iter-row grid y))))
 
 (defn direction-from-cell [cell direction]
   "get coordinate of direction from a given cell"
@@ -84,8 +84,8 @@
    (let [direction (direction-between src dest)
          reverse (direction-between dest src)]
      (cond-> grid
-       (not (nil? direction)) (update-link src direction)
-       (and bidirectional (not (nil? reverse))) (update-link dest reverse)))))
+       (some? direction) (update-link src direction)
+       (and bidirectional (some? reverse)) (update-link dest reverse)))))
 
 (defn get-neighbour [grid cell directions]
   "Get all cells neighbouring cell at specified directions"

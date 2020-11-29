@@ -15,7 +15,7 @@
 ;; TODO: utility (link-cell-dir grid cell :direction)
 (defn link-random-north [grid run]
   (let [random-cell (gen/rand-nth run)]
-    (if (gr/cell-has-neighbour grid random-cell :north)
+    (if (gr/cell-has-neighbour? grid random-cell :north)
       (gr/link-cells grid random-cell (gr/cell-at-dir grid random-cell :north))
       grid)))
 
@@ -29,12 +29,12 @@
       (link-random-north run)
       (link-east run)))
 
-(defn should-close-out [grid cell]
-  (and (gr/cell-has-neighbour grid cell :north)
+(defn should-close-out? [grid cell]
+  (and (gr/cell-has-neighbour? grid cell :north)
        (even? (gen/rand-nth '(0 1)))))
 
 (defn generate-runs [grid row]
-  (partition-by #(should-close-out grid %) row))
+  (partition-by #(should-close-out? grid %) row))
 
 (defn sidewinder [grid]
   (let [runs (mapcat #(generate-runs grid %) (gr/iter-rows grid))]
