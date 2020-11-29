@@ -70,8 +70,9 @@
   "find the direction between two cells"
   (let [dy (- (:row to) (:row from))
         dx (- (:column to) (:column from))]
-    (first (map first
-      (filter (fn [[k, [x, y]]] (and (= x dx) (= y dy))) coords)))))
+    (first (keys
+            (select-keys coords
+                         (for [[k [x y]] coords :when (and (= x dx) (= y dy))] k))))))
 
 (defn update-link [grid cell dir]
   "Add dir to cell links"
