@@ -6,6 +6,7 @@
    [dali.layout.stack]
    [dali.layout.align]))
 
+;; TODO: clean up this entire module
 (defn str-row-upper [row]
   (str "|"
        (str (str/join
@@ -87,3 +88,24 @@
 
 (defn svg [grid]
   (io/render-svg (svg-print grid) "output.svg"))
+
+(defn str-distances-upper-row [row distances path]
+  (str "|"
+       (str/join ""
+                 (map (fn [cell] (str " "
+                                      (if (some #(= cell %) path)
+                                        (str (Integer/toString (get distances (gr/grid-key cell)) 36) " ")
+                                        "  ")
+                                      (str (if (contains? (:links cell) :east) " " "|"))))
+                        row))
+       "\n"))
+
+(defn str-distances-row [row distances path]
+  (str (str-distances-upper-row row distances path) (str-row-lower-distances row distances)))
+
+(defn str-distances-path [grid distances path]
+  (str "+" (apply str (repeat (:cols grid) "---+")) "\n"
+       (str (str/join "" (map (fn [x] (str-distances-row (gr/iter-row grid x) distances path)) (reverse (range (:rows grid))))))))
+
+(defn ascii-path [grid distances path]
+  (print (str-distances-path grid distances path)))

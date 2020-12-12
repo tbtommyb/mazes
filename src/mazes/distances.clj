@@ -36,11 +36,13 @@
 (defn closer-neighbour [distances cells distance]
   (first (filter #(< (get-distance distances %) distance) cells)))
 
-(defn path-between [crumbs distances grid curr goal]
+(defn path-between-helper [crumbs distances maze curr goal]
   (if (= curr goal)
     crumbs
     (let [next-step (closer-neighbour distances
-                                      (gr/get-linked-cells grid curr)
+                                      (gr/get-linked-cells maze curr)
                                       (get-distance distances curr))]
-          (path-between (cons next-step crumbs) distances grid next-step goal))))
+          (path-between-helper (cons next-step crumbs) distances maze next-step goal))))
 
+(defn shortest-path [distances maze start goal]
+  (path-between-helper (list start) distances maze start goal))
