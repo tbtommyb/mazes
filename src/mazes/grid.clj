@@ -70,9 +70,10 @@
   "find the direction between two cells"
   (let [dy (- (:row to) (:row from))
         dx (- (:column to) (:column from))]
-    (first (keys
-            (select-keys coords
-                         (for [[k [x y]] coords :when (and (= x dx) (= y dy))] k))))))
+    (-> coords
+        (select-keys (for [[k [x y]] coords :when (and (= x dx) (= y dy))] k))
+        keys
+        first)))
 
 (defn update-link [grid cell dir]
   "Add dir to cell links"
@@ -96,9 +97,6 @@
           []
           directions))
 
-(defn get-neighbours [grid cell]
-  (get-neighbour grid cell [:north :east :south :west]))
-
 (defn get-link-cell [grid cell directions]
   "Get all linked cell at specified directions"
   (reduce (fn [links dir] (if (cell-has-link? cell dir)
@@ -109,3 +107,4 @@
 
 (defn get-linked-cells [grid cell]
   (get-link-cell grid cell [:north :east :south :west]))
+
