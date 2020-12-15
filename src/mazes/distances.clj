@@ -2,11 +2,17 @@
   (:require
    [mazes.grid :as gr]))
 
+(defn cell-key [cell]
+  "Create the key to look up a cell in grid"
+  (cond
+    (map? cell) (vector (:column cell) (:row cell))
+    (vector? cell) cell))
+
 (defn set-distance [distances cell value]
-  (assoc distances (gr/grid-key cell) value))
+  (assoc distances (cell-key cell) value))
 
 (defn get-distance [distances cell]
-  (get distances (gr/grid-key cell)))
+  (get distances (cell-key cell)))
 
 (defn init [grid]
   (reduce #(set-distance %1 %2 Integer/MAX_VALUE)
@@ -27,11 +33,10 @@
   (reduce #(update-dist %1 %2 distances grid) bc (gr/get-linked-cells grid current)))
 
 ;; TODO: validate x and y
-(defn dijkstra [grid x y]
-  (let [curr (gr/get-cell grid x y)]
-    (-> (init grid)
-        (set-distance curr 0)
-        (iter-dijkstra grid curr 1))))
+(defn dijkstra [grid coords]
+  (-> (init grid)
+      (set-distance coords 0)
+      (iter-dijkstra grid coords 1)))
 
 (defn closer-neighbour [distances cells distance]
   (first (filter #(< (get-distance distances %) distance) cells)))
@@ -44,5 +49,10 @@
                                       (get-distance distances curr))]
           (path-between-helper (cons next-step crumbs) distances maze next-step goal))))
 
+;; TODO validate that start > 0,0
 (defn shortest-path [distances maze start goal]
   (path-between-helper (list start) distances maze start goal))
+
+(defn furthest-cell [distances]
+  (key (apply max-key val distances)))
+

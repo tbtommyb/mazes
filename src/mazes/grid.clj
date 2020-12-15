@@ -14,36 +14,46 @@
   "Generate every coordinate for grid of size rows by cols"
   (for [x (range cols) y (range rows)] [x y]))
 
-(defn grid-key
+(defn grid-key [cell]
   "Create the key to look up a cell in grid"
-  ([x y] (str/join "," [x y]))
-  ([cell] (grid-key (:column cell) (:row cell))))
+  cell)
 
 (defn make-cell [column row]
   "Creates cell using row and column positions"
-  {:row row :column column :links #{}})
+  (set '()))
 
 (defn init [rows cols]
   "initialise a vector of length cols * rows, calling (make-cell x y) for each element"
   {:rows rows
    :cols cols
-   :cells (reduce (fn [grid [x y]] (assoc grid (grid-key x y) (make-cell x y)))
+   :cells (reduce (fn [grid [x y]] (assoc grid (grid-key [x y]) (make-cell x y)))
           {}
           (all-coords-for rows cols))})
 
-(defn get-cell [grid x y]
-  "Return the cell at x,y in grid"
-  (get-in grid [:cells (grid-key x y)]))
+(defn get-links
+  ([grid coords] (get-links grid (first coords) (second coords)))
+  ([grid x y]
+   "Return the cell at x,y in grid"
+   (get-in grid [:cells (grid-key [x y])])))
 
 (defn iter-grid [grid]
   "ITerate through grid by row then column, returning each cell"
-  (vec (for [x (range (:cols grid)) y (range (:rows grid))] (get-cell grid x y))))
+  (vec (for [x (range (:cols grid)) y (range (:rows grid))] (vector x y))))
+
+(defn iter-grid-links [grid]
+  "ITerate through grid by row then column, returning each cell"
+  (vec (for [x (range (:cols grid))
+             y (range (:rows grid))]
+         (hash-map [x y] (get-links grid x y)))))
+
+(defn iter-row-links [grid y]
+  (vec (for [x (range (:cols grid))] (hash-map [x y] (get-links grid x y)))))
 
 (defn iter-row [grid y]
-  (vec (for [x (range (:cols grid))] (get-cell grid x y))))
+  (vec (for [x (range (:cols grid))] (vector x y))))
 
 (defn iter-col [grid x]
-  (vec (for [y (range (:rows grid))] (get-cell grid x y))))
+  (vec (for [y (range (:rows grid))] (vector x y))))
 
 (defn iter-rows [grid]
   "Create a vector of grid rows"
@@ -52,24 +62,23 @@
 (defn direction-from-cell [cell direction]
   "get coordinate of direction from a given cell"
   (let [[dx dy] (get coords direction)]
-    [(+ dx (:column cell)) (+ dy (:row cell))]))
+    (vector (+ dx (first cell)) (+ dy (second cell)))))
 
 (defn cell-has-neighbour? [grid cell direction]
   (let [[x y] (direction-from-cell cell direction)]
-    (not (nil? (get-cell grid x y)))))
+    (not (nil? (get-links grid x y)))))
 
 (defn cell-has-link? [cell direction]
-  (contains? (:links cell) direction))
+  (contains? cell direction))
 
 (defn cell-at-dir [grid cell direction]
   "Get the cell at direction"
-  (let [[x y] (direction-from-cell cell direction)]
-    (get-cell grid x y)))
+  (direction-from-cell cell direction))
 
 (defn direction-between [from to]
   "find the direction between two cells"
-  (let [dy (- (:row to) (:row from))
-        dx (- (:column to) (:column from))]
+  (let [dy (- (second to) (second from))
+        dx (- (first to) (first from))]
     (-> coords
         (select-keys (for [[k [x y]] coords :when (and (= x dx) (= y dy))] k))
         keys
@@ -77,7 +86,7 @@
 
 (defn update-link [grid cell dir]
   "Add dir to cell links"
-  (update-in grid [:cells (grid-key cell) :links] #(conj % dir)))
+  (update-in grid [:cells (grid-key cell)] #(conj % dir)))
 
 (defn link-cells
   "Record a link between two cells"
@@ -99,9 +108,10 @@
 
 (defn get-link-cell [grid cell directions]
   "Get all linked cell at specified directions"
-  (reduce (fn [links dir] (if (cell-has-link? cell dir)
-                                 (conj links (cell-at-dir grid cell dir))
-                                 links))
+  (reduce (fn [links dir]
+            (if (cell-has-link? (get-links grid cell) dir)
+              (conj links (cell-at-dir grid cell dir))
+              links))
           []
           directions))
 

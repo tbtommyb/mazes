@@ -2,6 +2,7 @@
   (:require
    [clojure.string :as str]
    [mazes.grid :as gr]
+   [mazes.distances :as dist]
    [dali.io :as io]
    [dali.layout.stack]
    [dali.layout.align]))
@@ -11,7 +12,7 @@
   (str "|"
        (str (str/join
              ""
-             (map (fn [cell] (str "   " (if (contains? (:links cell) :east) " " "|")))
+             (map (fn [cell] (str "   " (if (contains? (first (vals cell)) :east) " " "|")))
                   row)))
        "\n"))
 
@@ -19,7 +20,7 @@
   (str "+"
        (str (str/join
              ""
-             (map (fn [cell] (str (if (contains? (:links cell) :south) "   " "---") "+"))
+             (map (fn [cell] (str (if (contains? (first (vals cell)) :south) "   " "---") "+"))
                   row)))
        "\n"))
 
@@ -28,35 +29,15 @@
 
 (defn str-grid [grid]
   (str "+" (apply str (repeat (:cols grid) "---+")) "\n"
-       (str (str/join "" (map (fn [x] (str-row (gr/iter-row grid x))) (reverse (range (:rows grid))))))))
-
-(def cell-size 50)
-
-(defn svg-print-cell [height cell]
-  (let [link? (partial gr/cell-has-link? cell)
-        x1 (* cell-size (:column cell))
-        y1 (- height (* cell-size (:row cell)))
-        x2 (* cell-size (+ 1 (:column cell)))
-        y2 (- height (* cell-size (+ 1 (:row cell))))]
-    [:dali/align {:axis :left}
-     [:line {:stroke (if (link? :south) :white :black)} [x1 y1] [x2 y1]]
-     [:line {:stroke (if (link? :west) :white :black)} [x1 y1] [x1 y2]]]))
-
-(defn svg-print [grid]
-  (let [width (* (:cols grid) cell-size)
-        height (* (:rows grid) cell-size)]
-    [:dali/page {:width width :height height}
-     [:rect {:fill :white}
-      [0 0] [width height]]
-     (map (partial svg-print-cell height) (gr/iter-grid grid))]))
+       (str (str/join "" (map (fn [y] (str-row (gr/iter-row-links grid y))) (reverse (range (:rows grid))))))))
 
 ;; TODO: tidy up and remove duplication
 (defn str-row-upper-distances [row distances]
   (str "|"
        (str/join ""
                  (map (fn [cell] (str " "
-                                      (str (Integer/toString (get distances (gr/grid-key cell)) 36) " ")
-                                      (str (if (contains? (:links cell) :east) " " "|"))))
+                                      (str (Integer/toString (get distances (gr/grid-key (first (keys cell)))) 36) " ")
+                                      (str (if (contains? (first (vals cell)) :east) " " "|"))))
                         row))
        "\n"))
 
@@ -64,7 +45,7 @@
   (str "+"
        (str/join
              ""
-             (map (fn [cell] (str (if (contains? (:links cell) :south)
+             (map (fn [cell] (str (if (contains? (first (vals cell)) :south)
                                     (str "   ")
                                     "---") "+"))
                   row))
@@ -75,7 +56,7 @@
 
 (defn str-grid-distances [grid distances]
   (str "+" (apply str (repeat (:cols grid) "---+")) "\n"
-       (str (str/join "" (map (fn [x] (str-row-distances (gr/iter-row grid x) distances)) (reverse (range (:rows grid))))))))
+       (str (str/join "" (map (fn [x] (str-row-distances (gr/iter-row-links grid x) distances)) (reverse (range (:rows grid))))))))
 
 (defn ascii-distances [grid distances]
   (print (str-grid-distances grid distances)))
@@ -83,20 +64,14 @@
 (defn ascii [grid]
   (print (str-grid grid)))
 
-(defn png [grid]
-  (io/render-png (svg-print grid) "output.png"))
-
-(defn svg [grid]
-  (io/render-svg (svg-print grid) "output.svg"))
-
 (defn str-distances-upper-row [row distances path]
   (str "|"
        (str/join ""
                  (map (fn [cell] (str " "
-                                      (if (some #(= cell %) path)
-                                        (str (Integer/toString (get distances (gr/grid-key cell)) 36) " ")
+                                      (if (some #(= (first (keys cell)) %) path)
+                                        (str (Integer/toString (get distances (gr/grid-key (first (keys cell)))) 36) " ")
                                         "  ")
-                                      (str (if (contains? (:links cell) :east) " " "|"))))
+                                      (str (if (contains? (first (vals cell)) :east) " " "|"))))
                         row))
        "\n"))
 
@@ -105,7 +80,55 @@
 
 (defn str-distances-path [grid distances path]
   (str "+" (apply str (repeat (:cols grid) "---+")) "\n"
-       (str (str/join "" (map (fn [x] (str-distances-row (gr/iter-row grid x) distances path)) (reverse (range (:rows grid))))))))
+       (str (str/join "" (map (fn [y] (str-distances-row (gr/iter-row-links grid y) distances path)) (reverse (range (:rows grid))))))))
 
 (defn ascii-path [grid distances path]
   (print (str-distances-path grid distances path)))
+
+;; images
+(def cell-size 50)
+
+(defn background-colour-for [distances cell]
+  (if (nil? distances)
+    :white
+    (let [distance (dist/get-distance distances cell)
+          furthest (apply max (vals distances))
+          intensity (/ (float (- furthest distance)) furthest)
+          dark (int (* 255 intensity))
+          bright (int (+ (* 127 intensity) 128))]
+      (format "rgb(%d,%d,%d)" dark bright dark))))
+
+(defn svg-print-cell [height distances cell]
+  (let [coords (first (keys cell))
+        link? (partial gr/cell-has-link? (first (vals cell)))
+        x1 (* cell-size (first coords))
+        y1 (- height (* cell-size (second coords)))
+        x2 (* cell-size (+ 1 (first coords)))
+        y2 (- height (* cell-size (+ 1 (second coords))))
+        colour (background-colour-for distances coords)]
+    [:dali/align {:axis :left}
+     [:line {:stroke (if (link? :south) colour :black)} [x1 y1] [x2 y1]]
+     [:line {:stroke (if (link? :west) colour :black)} [x1 y1] [x1 y2]]]))
+
+(defn svg-print-cell-background [height distances cell]
+  (let [coords (first (keys cell))
+        x1 (* cell-size (first coords))
+        y2 (- height (* cell-size (+ 1 (second coords))))
+        colour (background-colour-for distances coords)]
+    [:rect {:stroke colour :fill colour}
+     [x1 y2] [cell-size cell-size]]))
+
+(defn svg-print [grid distances]
+  (let [width (* (:cols grid) cell-size)
+        height (* (:rows grid) cell-size)]
+    [:dali/page {:width width :height height}
+     [:rect {:fill :white}
+      [0 0] [width height]]
+     (map (partial svg-print-cell-background height distances) (gr/iter-grid-links grid))
+     (map (partial svg-print-cell height distances) (gr/iter-grid-links grid))]))
+
+(defn png [grid distances]
+  (io/render-png (svg-print grid distances) "output.png"))
+
+(defn svg [grid distances]
+  (io/render-svg (svg-print grid distances) "output.svg"))
