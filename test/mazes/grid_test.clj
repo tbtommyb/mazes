@@ -62,46 +62,40 @@
 
 (deftest cell-neighbour-at-test
   (testing "Get neighbouring cell if it exists"
-    (let [grid (init 2 2)
-          cell (get-cell grid [0 0])]
-      (is (nil? (cell-neighbour-at grid cell :south)))
-      (is (nil? (cell-neighbour-at grid cell :west)))
-      (is (= (cell-neighbour-at grid cell :north)
+    (let [grid (init 2 2)]
+      (is (nil? (cell-neighbour-at grid [0 0] :south)))
+      (is (nil? (cell-neighbour-at grid [0 0] :west)))
+      (is (= (cell-neighbour-at grid [0 0] :north)
              (make-cell [0 1])))
-      (is (= (cell-neighbour-at grid cell :east)
+      (is (= (cell-neighbour-at grid [0 0] :east)
              (make-cell [1 0]))))))
 
 (deftest direction-between-test
   (testing "Find direction between two cells if neighbouring"
-    (is (nil? (direction-between (make-cell [0 0])
-                                 (make-cell [5 5]))))
-    (is (= :north (direction-between (make-cell [0 0])
-                                     (make-cell [0 1]))))
-    (is (= :south (direction-between (make-cell [0 1])
-                                     (make-cell [0 0]))))
-    (is (= :east (direction-between (make-cell [0 0])
-                                    (make-cell [1 0]))))
-    (is (= :west (direction-between (make-cell [1 0])
-                                    (make-cell [0 0]))))))
+    (is (nil? (direction-between [0 0] [5 5])))
+    (is (= :north (direction-between [0 0] [0 1])))
+    (is (= :south (direction-between [0 1] [0 0])))
+    (is (= :east (direction-between [0 0] [1 0])))
+    (is (= :west (direction-between [1 0] [0 0])))))
 
 (deftest link-cells-test
   (testing "Cells can be linked to each other"
     (let [grid (init 2 2)]
-      (is (= (link-cells grid (make-cell [0 0]) (make-cell [0 1]))
+      (is (= (link-cells grid [0 0] [0 1])
              {:rows 2
               :cols 2
               :cells {[0 0] #{:north}
                       [0 1] #{:south}
                       [1 0] #{}
                       [1 1] #{}}}))
-      (is (= (link-cells grid (make-cell [0 0]) (make-cell [1 1]))
+      (is (= (link-cells grid [0 0] [1 1])
              {:rows 2
               :cols 2
               :cells {[0 0] #{}
                       [0 1] #{}
                       [1 0] #{}
                       [1 1] #{}}}))
-      (is (= (link-cells grid (make-cell [0 0]) (make-cell [0 0]))
+      (is (= (link-cells grid [0 0] [0 0])
              {:rows 2
               :cols 2
               :cells {[0 0] #{}
@@ -112,12 +106,20 @@
 
 (deftest get-cell-neighbours-test
   (testing "Find cells adjacent to a given cell"
-    (let [grid (init 2 2)
-          cell (make-cell [0 0])]
-      (is (= (get-cell-neighbours grid cell '(:north :south :east :west))
+    (let [grid (init 2 2)]
+      (is (= (get-cell-neighbours grid [0 0] '(:north :south :east :west))
              [{:coords [0 1] :links #{}}
               {:coords [1 0] :links #{}}]))
-      (is (= (get-cell-neighbours grid cell '()) [])))))
+      (is (= (get-cell-neighbours grid [0 0] '()) [])))))
 
-(deftest get-cell-links
-  (testing "TODO"))
+(deftest get-cell-links-test
+  (testing "Creating a grid"
+    (let [grid {:rows 2
+                :cols 2
+                :cells {[0 0] #{:north}
+                        [0 1] #{:south :east}
+                        [1 0] #{}
+                        [1 1] #{:west}}}]
+      (is (= (get-cell-links grid [0 1])
+             [{:coords [0 0] :links #{:north}}
+              {:coords [1 1] :links #{:west}}])))))

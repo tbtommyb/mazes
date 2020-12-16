@@ -126,14 +126,22 @@
   (let [[dx dy] (get dir-step direction)]
     (vector (+ dx (get-cell-x cell)) (+ dy (get-cell-y cell)))))
 
+(defn add-direction-to-coords
+  "Add `direction` to `coords`"
+  [coords direction]
+  {:pre [(s/valid? ::coords coords)
+         (s/valid? ::direction? direction)]}
+  (let [[dx dy] (get dir-step direction)]
+    (vector (+ dx (first coords)) (+ dy (second coords)))))
+
 (defn cell-neighbour-at
-  "Get the (possibly nil) cell neighbouring `cell` at `direction`"
-  [grid cell direction]
+  "Find neighour in `direction` of cell at `coords in `grid`"
+  [grid coords direction]
   {:pre [(s/valid? ::grid? grid)
-         (s/valid? ::cell? cell)
+         (s/valid? ::coords coords)
          (s/valid? ::direction? direction)]
    :post [(s/valid? (s/nilable ::cell?) %)]}
-  (get-cell grid (coords-from-cell cell direction)))
+  (get-cell grid (add-direction-to-coords coords direction)))
 
 (defn cell-has-link?
   "Boolean whether the `cell` has a link to `direction`"
@@ -146,29 +154,29 @@
 (defn direction-between
   "Returns the direction as nilable symbol between `from` and `to`"
   [from to]
-  {:pre [(s/valid? ::cell? from)
-         (s/valid? ::cell? to)]
+  {:pre [(s/valid? ::coords from)
+         (s/valid? ::coords to)]
    :post [(s/valid? (s/nilable ::direction?) %)]}
-  (let [dx (- (get-cell-x to) (get-cell-x from))
-        dy (- (get-cell-y to) (get-cell-y from))]
+  (let [dx (- (first to) (first from))
+        dy (- (second to) (second from))]
     (get step-dir [dx dy])))
 
 (defn link-cell-towards
-  "Add a link from `cell` to `direction`"
-  [grid cell direction]
+  "Add a link from `coords` to `direction`"
+  [grid coords direction]
   {:pre [(s/valid? ::grid? grid)
-         (s/valid? ::cell? cell)
+         (s/valid? ::coords coords)
          (s/valid? ::direction? direction)]
    :post [(s/valid? ::grid? %)]}
-  (update-in grid [:cells (grid-key cell)] #(conj % direction)))
+  (update-in grid [:cells coords] #(conj % direction)))
 
 (defn link-cells
   "Record a link in `grid` from `src` to `dest` if they are neighbours. Default bidirectional"
   ([grid, src, dest] (link-cells grid src dest true))
   ([grid, src, dest, bidirectional]
    {:pre [(s/valid? ::grid? grid)
-          (s/valid? ::cell? src)
-          (s/valid? ::cell? dest)
+          (s/valid? ::coords src)
+          (s/valid? ::coords dest)
           (s/valid? boolean? bidirectional)]
     :post [(s/valid? ::grid? grid)]}
    (let [direction (direction-between src dest)
@@ -180,12 +188,12 @@
 ;; TODO: use a seq?
 (defn get-cell-neighbours
   "In `grid` get neighbours of `cell` at `directions`"
-  [grid cell directions]
+  [grid coords directions]
   {:pre [(s/valid? ::grid? grid)
-         (s/valid? ::cell? cell)
+         (s/valid? ::coords coords)
          (s/valid? (s/coll-of ::direction?) directions)]
    :post [(s/valid? ::cell-list? %)]}
-  (reduce #(if-let [neighbour (cell-neighbour-at grid cell %2)]
+  (reduce #(if-let [neighbour (cell-neighbour-at grid coords %2)]
              (conj %1 neighbour)
              %1)
           []
@@ -194,14 +202,14 @@
 ;; TODO: use a seq?
 (defn get-cell-links
   "In `grid` get all cells linked to `cell` in `directions`. Default all"
-  ([grid cell] (get-cell-links grid cell [:north :east :west :south]))
-  ([grid cell directions]
+  ([grid coords] (get-cell-links grid coords directions))
+  ([grid coords dirs]
    {:pre [(s/valid? ::grid? grid)
-          (s/valid? ::cell? cell)
-          (s/valid? (s/coll-of ::direction?) directions)]
+          (s/valid? ::coords coords)
+          (s/valid? (s/coll-of ::direction?) dirs)]
     :post [(s/valid? ::cell-list? %)]}
-   (reduce #(if (cell-has-link? (:links cell) %2)
-              (conj %1 (cell-neighbour-at grid cell %2))
+   (reduce #(if (cell-has-link? (get-cell grid coords) %2)
+              (conj %1 (cell-neighbour-at grid coords %2))
               %1)
            []
            directions)))
