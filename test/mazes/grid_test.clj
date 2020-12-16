@@ -108,3 +108,16 @@
                       [0 1] #{}
                       [1 0] #{}
                       [1 1] #{}}})))))
+
+
+(deftest get-cell-neighbours-test
+  (testing "Find cells adjacent to a given cell"
+    (let [grid (init 2 2)
+          cell (make-cell [0 0])]
+      (is (= (get-cell-neighbours grid cell '(:north :south :east :west))
+             [{:coords [0 1] :links #{}}
+              {:coords [1 0] :links #{}}]))
+      (is (= (get-cell-neighbours grid cell '()) [])))))
+
+(deftest get-cell-links
+  (testing "TODO"))

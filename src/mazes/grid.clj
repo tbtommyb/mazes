@@ -177,23 +177,32 @@
        (some? direction) (link-cell-towards src direction)
        (and bidirectional (some? reverse)) (link-cell-towards dest reverse)))))
 
-;; (defn get-neighbour [grid cell directions]
-;;   "Get all cells neighbouring cell at specified directions"
-;;   (reduce (fn [neighbours dir] (if (cell-has-neighbour? grid cell dir)
-;;                                  (conj neighbours (cell-at-dir grid cell dir))
-;;                                  neighbours))
-;;           []
-;;           directions))
+;; TODO: use a seq?
+(defn get-cell-neighbours
+  "In `grid` get neighbours of `cell` at `directions`"
+  [grid cell directions]
+  {:pre [(s/valid? ::grid? grid)
+         (s/valid? ::cell? cell)
+         (s/valid? (s/coll-of ::direction?) directions)]
+   :post [(s/valid? ::cell-list? %)]}
+  (reduce #(if-let [neighbour (cell-neighbour-at grid cell %2)]
+             (conj %1 neighbour)
+             %1)
+          []
+          directions))
 
-;; (defn get-link-cell [grid cell directions]
-;;   "Get all linked cell at specified directions"
-;;   (reduce (fn [links dir]
-;;             (if (cell-has-link? (get-links grid cell) dir)
-;;               (conj links (cell-at-dir grid cell dir))
-;;               links))
-;;           []
-;;           directions))
-
-;; (defn get-linked-cells [grid cell]
-;;   (get-link-cell grid cell [:north :east :south :west]))
+;; TODO: use a seq?
+(defn get-cell-links
+  "In `grid` get all cells linked to `cell` in `directions`. Default all"
+  ([grid cell] (get-cell-links grid cell [:north :east :west :south]))
+  ([grid cell directions]
+   {:pre [(s/valid? ::grid? grid)
+          (s/valid? ::cell? cell)
+          (s/valid? (s/coll-of ::direction?) directions)]
+    :post [(s/valid? ::cell-list? %)]}
+   (reduce #(if (cell-has-link? (:links cell) %2)
+              (conj %1 (cell-neighbour-at grid cell %2))
+              %1)
+           []
+           directions)))
 
