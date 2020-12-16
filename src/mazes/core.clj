@@ -5,7 +5,7 @@
    [mazes.distances :as dist]
    [mazes.algorithms :as algo]))
 
-(def grid (gr/init 7 7))
+(def grid (gr/init 3 7))
 (def maze (algo/binary-tree grid))
 (def distances (dist/dijkstra maze [0 0]))
 
