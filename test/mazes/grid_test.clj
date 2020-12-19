@@ -42,10 +42,10 @@
                {:coords [2 0] :links #{}}
                {:coords [2 1] :links #{}}))))))
 
-(deftest iter-rows-test
+(deftest iter-rows-coords-test
   (testing "Iterating through a grid row by row"
     (let [grid (init 2 3)]
-      (is (= (iter-rows grid)
+      (is (= (iter-rows-coords grid)
              [[[0 0] [1 0] [2 0]] [[0 1] [1 1] [2 1]]])))))
 
 (deftest coords-from-cell-test
@@ -105,11 +105,10 @@
 
 
 (deftest get-cell-neighbours-test
-  (testing "Find cells adjacent to a given cell"
+  (testing "Find coords of cells adjacent to a given cell"
     (let [grid (init 2 2)]
       (is (= (get-cell-neighbours grid [0 0] '(:north :south :east :west))
-             [{:coords [0 1] :links #{}}
-              {:coords [1 0] :links #{}}]))
+             [[0 1] [1 0]]))
       (is (= (get-cell-neighbours grid [0 0] '()) [])))))
 
 (deftest get-cell-links-test

@@ -94,25 +94,33 @@
   (map (partial get-cell grid)
        (all-coords-for (:rows grid) (:cols grid))))
 
-(defn iter-rows-cells
-  "Iterate through `grid` by row, returning each cell"
-  [grid]
-  {:pre [(s/valid? ::grid? grid)]
-   :post [(s/valid? (s/coll-of ::cell-list?) %)]}
-  (map (partial get-cell grid)
-       (all-coords-for (:rows grid) (:cols grid))))
+;; (defn iter-rows-cells
+;;   "Iterate through `grid` by row, returning each cell"
+;;   [grid]
+;;   {:pre [(s/valid? ::grid? grid)]}
+;;    ;; :post [(s/valid? (s/coll-of ::cell-list?) %)]}
+;;   (map (partial get-cell grid)
+;;        (all-coords-for (:rows grid) (:cols grid))))
 
 ;; TODO: cells or coordinates?
 (defn iter-single-row
-  "Create a vector of every coordinate in row `y` of `grid`"
+  "Create a vector of every coord in row `y` of `grid`"
   [grid y]
   {:pre [(s/valid? ::grid? grid)
          (s/valid? int? y)]
    :post [(s/valid? ::coord-list %)]}
   (vec (for [x (range (:cols grid))] [x y])))
 
-(defn iter-rows
-  "Create a vector of every row in `grid`"
+(defn iter-rows-cells
+  "Create a cell seq of every row in `grid`"
+  [grid]
+  {:pre [(s/valid? ::grid? grid)]
+   :post [(s/valid? (s/coll-of ::cell-list?) %)]}
+  (seq (for [y (range (:rows grid))]
+         (map (partial get-cell grid) (iter-single-row grid y)))))
+
+(defn iter-rows-coords
+  "Create a coord vector of every row in `grid`"
   [grid]
   {:pre [(s/valid? ::grid? grid)]
    :post [(s/valid? (s/coll-of ::coord-list) %)]}
@@ -187,21 +195,21 @@
 
 ;; TODO: use a seq?
 (defn get-cell-neighbours
-  "In `grid` get neighbours of `cell` at `directions`"
+  "In `grid` get neighbours of cell at `coords` in `directions`"
   [grid coords directions]
   {:pre [(s/valid? ::grid? grid)
          (s/valid? ::coords coords)
          (s/valid? (s/coll-of ::direction?) directions)]
-   :post [(s/valid? ::cell-list? %)]}
+   :post [(s/valid? ::coord-list %)]}
   (reduce #(if-let [neighbour (cell-neighbour-at grid coords %2)]
-             (conj %1 neighbour)
+             (conj %1 (grid-key neighbour))
              %1)
           []
           directions))
 
 ;; TODO: use a seq?
 (defn get-cell-links
-  "In `grid` get all cells linked to `cell` in `directions`. Default all"
+  "In `grid` get all cells linked to cell at `coords` in `directions`. Default all"
   ([grid coords] (get-cell-links grid coords directions))
   ([grid coords dirs]
    {:pre [(s/valid? ::grid? grid)
