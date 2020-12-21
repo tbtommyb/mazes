@@ -15,30 +15,51 @@
           grid
           (apply concat (gr/iter-rows-coords grid))))
 
-;; TODO: utility (link-cell-dir grid cell :direction)
-;; (defn link-random-north [grid run]
-;;   (let [random-cell (gen/rand-nth run)]
-;;     (if (gr/cell-has-neighbour? grid random-cell :north)
-;;       (gr/link-cells grid random-cell (gr/cell-at-dir grid random-cell :north))
-;;       grid)))
+(defn link-random-north
+  "Link a random cell in `run` to the north"
+  [grid run]
+  (let [random-cell (gen/rand-nth run)]
+    (if-let [northern-neighbour (gr/cell-neighbour-at grid random-cell :north)]
+      (gr/link-cells grid random-cell northern-neighbour)
+      grid)))
 
-;; (defn link-east [grid run]
-;;   (reduce (fn [grid [fst snd]] (gr/link-cells grid fst snd))
-;;           grid
-;;           (partition 2 1 run)))
+(defn link-east
+  "Link every coord in `run` eastwards into `grid`"
+  [grid run]
+  (reduce (fn [grid [fst snd]] (gr/link-cells grid fst snd))
+          grid
+          (partition 2 1 run)))
 
-;; (defn connect-run [grid run]
-;;   (-> grid
-;;       (link-random-north run)
-;;       (link-east run)))
+(defn connect-run
+  "Link `run` into `grid`"
+  [grid run]
+  {:pre [(s/valid? ::gr/grid? grid)
+         (s/valid? ::gr/coord-list run)]
+   :post [(s/valid? ::gr/grid? %)]}
+  (-> grid
+      (link-random-north run)
+      (link-east run)))
 
-;; (defn should-close-out? [grid cell]
-;;   (and (gr/cell-has-neighbour? grid cell :north)
-;;        (even? (gen/rand-nth '(0 1)))))
+(defn should-close-out?
+  "Decide whether `coord` should close the current run"
+  [grid coord]
+  {:pre [(s/valid? ::gr/grid? grid)
+         (s/valid? ::gr/coords coord)]}
+  (and (not-empty (gr/cell-neighbour-at grid coord :north))
+       (even? (gen/rand-nth '(0 1)))))
 
-;; (defn generate-runs [grid row]
-;;   (partition-by #(should-close-out? grid %) row))
+(defn generate-runs
+  "Create randomly sized runs of cells from `row`"
+  [grid row]
+  {:pre [(s/valid? ::gr/grid? grid)
+         (s/valid? ::gr/coord-list row)]
+   :post [(s/valid? (s/coll-of ::gr/coord-list) %)]}
+  (partition-by #(should-close-out? grid %) row))
 
-;; (defn sidewinder [grid]
-;;   (let [runs (mapcat #(generate-runs grid %) (gr/iter-rows grid))]
-;;     (reduce connect-run grid runs)))
+(defn sidewinder
+  "Generate links in `grid` using a binary tree algorithm"
+  [grid]
+  {:pre [(s/valid? ::gr/grid? grid)]
+   :post [(s/valid? ::gr/grid? %)]}
+  (let [runs (mapcat #(generate-runs grid %) (gr/iter-rows-coords grid))]
+    (reduce connect-run grid runs)))

@@ -148,8 +148,10 @@
   {:pre [(s/valid? ::grid? grid)
          (s/valid? ::coords coords)
          (s/valid? ::direction? direction)]
-   :post [(s/valid? (s/nilable ::cell?) %)]}
-  (get-cell grid (add-direction-to-coords coords direction)))
+   :post [(s/valid? (s/nilable ::coords) %)]}
+  (let [neighbour-coords (add-direction-to-coords coords direction)]
+    (when (get-cell grid neighbour-coords)
+      neighbour-coords)))
 
 (defn cell-has-link?
   "Boolean whether the `cell` has a link to `direction`"
@@ -202,7 +204,7 @@
          (s/valid? (s/coll-of ::direction?) directions)]
    :post [(s/valid? ::coord-list %)]}
   (reduce #(if-let [neighbour (cell-neighbour-at grid coords %2)]
-             (conj %1 (grid-key neighbour))
+             (conj %1 neighbour)
              %1)
           []
           directions))
@@ -215,7 +217,7 @@
    {:pre [(s/valid? ::grid? grid)
           (s/valid? ::coords coords)
           (s/valid? (s/coll-of ::direction?) dirs)]
-    :post [(s/valid? ::cell-list? %)]}
+    :post [(s/valid? ::coord-list %)]}
    (reduce #(if (cell-has-link? (get-cell grid coords) %2)
               (conj %1 (cell-neighbour-at grid coords %2))
               %1)

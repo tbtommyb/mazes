@@ -14,3 +14,14 @@
                       [0 1] #{:east}
                       [1 0] #{:west :north}
                       [1 1] #{:west :south}}})))))
+
+(deftest sidewinder-test
+  (testing "Applying the sidewinder algorithm to a grid"
+    (binding [gen/*rnd* (java.util.Random. 5)]
+      (is (= (sidewinder (gr/init 2 2))
+             {:rows 2
+              :cols 2
+              :cells {[0 0] #{:north}
+                      [0 1] #{:south :east}
+                      [1 0] #{:north}
+                      [1 1] #{:west :south}}})))))

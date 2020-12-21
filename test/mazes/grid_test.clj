@@ -65,10 +65,8 @@
     (let [grid (init 2 2)]
       (is (nil? (cell-neighbour-at grid [0 0] :south)))
       (is (nil? (cell-neighbour-at grid [0 0] :west)))
-      (is (= (cell-neighbour-at grid [0 0] :north)
-             (make-cell [0 1])))
-      (is (= (cell-neighbour-at grid [0 0] :east)
-             (make-cell [1 0]))))))
+      (is (= (cell-neighbour-at grid [0 0] :north) [0 1]))
+      (is (= (cell-neighbour-at grid [0 0] :east) [1 0])))))
 
 (deftest direction-between-test
   (testing "Find direction between two cells if neighbouring"
@@ -119,6 +117,4 @@
                         [0 1] #{:south :east}
                         [1 0] #{}
                         [1 1] #{:west}}}]
-      (is (= (get-cell-links grid [0 1])
-             [{:coords [0 0] :links #{:north}}
-              {:coords [1 1] :links #{:west}}])))))
+      (is (= (get-cell-links grid [0 1]) [[0 0] [1 1]])))))
