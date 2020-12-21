@@ -13,7 +13,7 @@
              (gr/link-cells %1 %2 (gen/rand-nth neighbours))
              %1)
           grid
-          (apply concat (gr/iter-rows-coords grid))))
+          (gr/iter-coords grid)))
 
 (defn link-random-north
   "Link a random cell in `run` to the north"

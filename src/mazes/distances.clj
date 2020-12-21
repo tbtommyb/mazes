@@ -1,42 +1,68 @@
 (ns mazes.distances
   (:require
+   [clojure.spec.alpha :as s]
    [mazes.grid :as gr]))
 
-;; (defn cell-key [cell]
-;;   "Create the key to look up a cell in grid"
-;;   (cond
-;;     (map? cell) (vector (:column cell) (:row cell))
-;;     (vector? cell) cell))
+(s/def ::distances? map?)
+(s/def ::distance? int?)
 
-;; (defn set-distance [distances cell value]
-;;   (assoc distances (cell-key cell) value))
+(defn set-distance
+  "Set distance for `coords` in `distances` to `value`"
+  [distances coords value]
+  {:pre [(s/valid? ::distances? distances)
+         (s/valid? ::gr/coords coords)
+         (s/valid? ::distance? value)]
+   :post [(s/valid? ::distances? %)]}
+  (assoc distances coords value))
 
-;; (defn get-distance [distances cell]
-;;   (get distances (cell-key cell)))
+(defn get-distance
+  "Get distance of `coords` in `distances`"
+  [distances coords]
+  {:pre [(s/valid? ::distances? distances)
+         (s/valid? ::gr/coords coords)]
+   :post [(s/valid? ::distance? %)]}
+  (get distances coords))
 
-;; (defn init [grid]
-;;   (reduce #(set-distance %1 %2 Integer/MAX_VALUE)
-;;           {}
-;;           (gr/iter-grid grid)))
+(defn init-distances
+  "Initialise a `distances` map for `grid`"
+  [grid]
+  {:pre [(s/valid? ::gr/grid? grid)]
+   :post [(s/valid? ::distances? % )]}
+  (reduce #(set-distance %1 %2 Integer/MAX_VALUE)
+          {}
+          (gr/iter-coords grid)))
 
-;; (declare iter-dijkstra)
+(defn iter-dijkstra
+  "Populate `distances` from `current` coords at `distance` from start in `grid`"
+  [distances grid current distance]
+  {:pre [(s/valid? ::distances? distances)
+         (s/valid? ::gr/grid? grid)
+         (s/valid? ::gr/coords current)
+         (s/valid? ::distance? distance)]
+   :post [(s/valid? ::distances? %)]}
+  (letfn [(update-dist
+            [distances cell distance]
+            (if (< distance (get-distance distances cell))
+              (iter-helper (set-distance distances cell distance) cell (inc distance))
+              distances))
+          (iter-helper
+            [distances current distance]
+            (reduce #(update-dist %1 %2 distance) distances (gr/get-cell-links grid current)))]
+    (iter-helper distances current distance)))
 
-;; (defn update-dist [distances cell distance grid]
-;;   (if (< distance (get-distance distances cell))
-;;     (iter-dijkstra (set-distance distances cell distance) grid cell (inc distance))
-;;     distances))
-
-;; (defn iter-dijkstra [distances grid current distance]
-;;   (reduce #(update-dist %1 %2 distance grid) distances (gr/get-linked-cells grid current)))
+;; TODO: validate start is within bounds of grid
+;;       distance validation
+(defn dijkstra
+  "Determine the distance of every cell in `grid` from `start`"
+  [grid start]
+  {:pre [(s/valid? ::gr/grid? grid)
+         (s/valid? ::gr/coords start)]}
+  (-> (init-distances grid)
+      (set-distance start 0)
+      (iter-dijkstra grid start 1)))
 
 ;; (defn iter-dijkstra-path [distances grid current bc]
 ;;   (reduce #(update-dist %1 %2 distances grid) bc (gr/get-linked-cells grid current)))
-
-;; ;; TODO: validate x and y
-;; (defn dijkstra [grid coords]
-;;   (-> (init grid)
-;;       (set-distance coords 0)
-;;       (iter-dijkstra grid coords 1)))
 
 ;; (defn closer-neighbour [distances cells distance]
 ;;   (first (filter #(< (get-distance distances %) distance) cells)))

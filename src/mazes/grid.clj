@@ -94,13 +94,12 @@
   (map (partial get-cell grid)
        (all-coords-for (:rows grid) (:cols grid))))
 
-;; (defn iter-rows-cells
-;;   "Iterate through `grid` by row, returning each cell"
-;;   [grid]
-;;   {:pre [(s/valid? ::grid? grid)]}
-;;    ;; :post [(s/valid? (s/coll-of ::cell-list?) %)]}
-;;   (map (partial get-cell grid)
-;;        (all-coords-for (:rows grid) (:cols grid))))
+(defn iter-coords
+  "Iterate through `grid` by column, returning each coord"
+  [grid]
+  {:pre [(s/valid? ::grid? grid)]
+   :post [(s/valid? ::coord-list %)]}
+  (all-coords-for (:rows grid) (:cols grid)))
 
 ;; TODO: cells or coordinates?
 (defn iter-single-row

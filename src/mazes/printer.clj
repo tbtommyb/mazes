@@ -11,9 +11,11 @@
 ;; TODO: clean up this entire module
 (defn ascii-upper-row
   "Generate an ASCII representation of the upper half of `row`"
-  [row]
+  [row cell-renderer]
   {:pre [(s/valid? ::gr/cell-list? row)]}
-  (let [render-cell #(if (gr/cell-has-link? % :east) "    " "   |")]
+  (let [render-cell #(if (gr/cell-has-link? % :east)
+                       (format " %s  " (cell-renderer %))
+                       (format " %s |" (cell-renderer %)))]
     (flatten (list "|" (map render-cell row) "\n"))))
 
 (defn ascii-lower-row
@@ -25,66 +27,34 @@
 
 (defn ascii-row
   "Generate an ASCII representation of `row`"
-  [row]
-  (concat (ascii-upper-row row) (ascii-lower-row row)))
+  [row cell-renderer]
+  (concat (ascii-upper-row row cell-renderer) (ascii-lower-row row)))
 
-(defn ascii-grid
-  "Generate an ASCII representation of `grid`"
-  [grid]
-  {:pre [(s/valid? ::gr/grid? grid)] }
+(defn ascii-grid-renderer
+  "Generate an ASCII representation of `grid` using `cell-renderer"
+  [grid cell-renderer]
   (let [top-wall (flatten (list "+" (repeat (:cols grid) "---+") "\n"))]
     (concat top-wall
-         (mapcat ascii-row (reverse (gr/iter-rows-cells grid))))))
+         (mapcat #(ascii-row % cell-renderer) (reverse (gr/iter-rows-cells grid))))))
 
-(defn ascii
+(defn ascii-grid
   "Print an ASCII representation of `grid`"
   [grid]
-  (print (str/join (ascii-grid grid))))
+  {:pre [(s/valid? ::gr/grid? grid)]}
+  (ascii-grid-renderer grid (fn [cell] " ")))
 
-;; TODO: tidy up and remove duplication
-;; (defn str-row-upper-distances [row distances]
-;;   (str "|"
-;;        (str/join ""
-;;                  (map (fn [cell] (str " "
-;;                                       (str (Integer/toString (get distances (gr/grid-key (first (keys cell)))) 36) " ")
-;;                                       (str (if (contains? (first (vals cell)) :east) " " "|"))))
-;;                         row))
-;;        "\n"))
+(defn ascii-distances
+  "Print an ASCII representation of `grid` with `distances`"
+  [grid distances]
+  {:pre [(s/valid? ::gr/grid? grid)
+         (s/valid? ::dist/distances? distances)]}
+  (let [cell-renderer (fn [cell]
+                        (Integer/toString (dist/get-distance distances (gr/grid-key cell)) 36))]
+    (ascii-grid-renderer grid cell-renderer)))
 
-;; (defn str-row-lower-distances [row distances]
-;;   (str "+"
-;;        (str/join
-;;              ""
-;;              (map (fn [cell] (str (if (contains? (first (vals cell)) :south)
-;;                                     (str "   ")
-;;                                     "---") "+"))
-;;                   row))
-;;        "\n"))
-
-;; (defn str-row-distances [row distances]
-;;   (str (str-row-upper-distances row distances) (str-row-lower-distances row distances)))
-
-;; (defn str-grid-distances [grid distances]
-;;   (str "+" (apply str (repeat (:cols grid) "---+")) "\n"
-;;        (str (str/join "" (map (fn [x] (str-row-distances (gr/iter-row-links grid x) distances)) (reverse (range (:rows grid))))))))
-
-;; (defn ascii-distances [grid distances]
-;;   (print (str-grid-distances grid distances)))
-
-;; (defn str-distances-upper-row [row distances path]
-;;   (str "|"
-;;        (str/join ""
-;;                  (map (fn [cell] (str " "
-;;                                       (if (some #(= (first (keys cell)) %) path)
-;;                                         (str (Integer/toString (get distances (gr/grid-key (first (keys cell)))) 36) " ")
-;;                                         "  ")
-;;                                       (str (if (contains? (first (vals cell)) :east) " " "|"))))
-;;                         row))
-;;        "\n"))
-
-;; (defn str-distances-row [row distances path]
-;;   (str (str-distances-upper-row row distances path) (str-row-lower-distances row distances)))
-
+(defn out
+  [ascii-output]
+  (print (str/join "" ascii-output)))
 ;; (defn str-distances-path [grid distances path]
 ;;   (str "+" (apply str (repeat (:cols grid) "---+")) "\n"
 ;;        (str (str/join "" (map (fn [y] (str-distances-row (gr/iter-row-links grid y) distances path)) (reverse (range (:rows grid))))))))
