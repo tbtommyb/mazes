@@ -33,22 +33,24 @@
           (gr/iter-coords grid)))
 
 (defn iter-dijkstra
-  "Populate `distances` from `current` coords at `distance` from start in `grid`"
-  [distances grid current distance]
+  "Populate `distances` from `start` in `grid`"
+  [distances grid start]
   {:pre [(s/valid? ::distances? distances)
          (s/valid? ::gr/grid? grid)
-         (s/valid? ::gr/coords current)
-         (s/valid? ::distance? distance)]
+         (s/valid? ::gr/coords start)]
    :post [(s/valid? ::distances? %)]}
   (letfn [(update-dist
             [distances cell distance]
             (if (< distance (get-distance distances cell))
-              (iter-helper (set-distance distances cell distance) cell (inc distance))
+              (iter-helper
+               (set-distance distances cell distance)
+               (gr/get-cell-links grid cell)
+               (inc distance))
               distances))
           (iter-helper
-            [distances current distance]
-            (reduce #(update-dist %1 %2 distance) distances (gr/get-cell-links grid current)))]
-    (iter-helper distances current distance)))
+            [distances coords distance]
+            (reduce #(update-dist %1 %2 distance) distances coords))]
+    (iter-helper distances (list start) 0)))
 
 ;; TODO: validate start is within bounds of grid
 ;;       distance validation
@@ -58,11 +60,7 @@
   {:pre [(s/valid? ::gr/grid? grid)
          (s/valid? ::gr/coords start)]}
   (-> (init-distances grid)
-      (set-distance start 0)
-      (iter-dijkstra grid start 1)))
-
-;; (defn iter-dijkstra-path [distances grid current bc]
-;;   (reduce #(update-dist %1 %2 distances grid) bc (gr/get-linked-cells grid current)))
+      (iter-dijkstra grid start)))
 
 ;; (defn closer-neighbour [distances cells distance]
 ;;   (first (filter #(< (get-distance distances %) distance) cells)))
