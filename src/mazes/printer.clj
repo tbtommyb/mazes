@@ -8,7 +8,6 @@
    [dali.layout.stack]
    [dali.layout.align]))
 
-;; TODO: clean up this entire module
 (defn ascii-upper-row
   "Generate an ASCII representation of the upper half of `row`"
   [row cell-renderer]
@@ -52,17 +51,21 @@
                         (Integer/toString (dist/get-distance distances (gr/grid-key cell)) 36))]
     (ascii-grid-renderer grid cell-renderer)))
 
+;; TDDO add validation for path
+(defn ascii-path
+  "Print an ASCII representation of `path` through `grid`"
+  [grid path]
+  (let [cell-renderer (fn [cell]
+                        (if-let [step (first (filter #(= (:coords cell) (:coords %)) path))]
+                          (Integer/toString (:distance step) 36)
+                          " "))]
+    (ascii-grid-renderer grid cell-renderer)))
+
 (defn out
   [ascii-output]
   (print (str/join "" ascii-output)))
-;; (defn str-distances-path [grid distances path]
-;;   (str "+" (apply str (repeat (:cols grid) "---+")) "\n"
-;;        (str (str/join "" (map (fn [y] (str-distances-row (gr/iter-row-links grid y) distances path)) (reverse (range (:rows grid))))))))
 
-;; (defn ascii-path [grid distances path]
-;;   (print (str-distances-path grid distances path)))
-
-;; ;; images
+;; images
 ;; (def cell-size 50)
 
 ;; (defn background-colour-for [distances cell]

@@ -41,8 +41,8 @@
     (binding [gen/*rnd* (java.util.Random. 3)]
       (let [maze (algo/sidewinder (gr/init 3 3))]
         (is (= (dist/shortest-path maze [2 2] [0 0])
-               '([0 0]
-                 [0 1]
-                 [1 1]
-                 [1 2]
-                 [2 2])))))))
+               '({:coords [0 0] :distance 0}
+                 {:coords [0 1] :distance 1}
+                 {:coords [1 1] :distance 2}
+                 {:coords [1 2] :distance 3}
+                 {:coords [2 2] :distance 4})))))))
