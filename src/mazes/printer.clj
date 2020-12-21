@@ -48,17 +48,10 @@
   {:pre [(s/valid? ::gr/grid? grid)
          (s/valid? ::dist/distances? distances)]}
   (let [cell-renderer (fn [cell]
-                        (Integer/toString (dist/get-distance distances (gr/grid-key cell)) 36))]
-    (ascii-grid-renderer grid cell-renderer)))
-
-;; TDDO add validation for path
-(defn ascii-path
-  "Print an ASCII representation of `path` through `grid`"
-  [grid path]
-  (let [cell-renderer (fn [cell]
-                        (if-let [step (first (filter #(= (:coords cell) (:coords %)) path))]
-                          (Integer/toString (:distance step) 36)
-                          " "))]
+                        (let [distance (dist/get-distance distances (gr/grid-key cell))]
+                          (if (< distance Integer/MAX_VALUE)
+                            (Integer/toString distance 36)
+                            " ")))]
     (ascii-grid-renderer grid cell-renderer)))
 
 (defn out

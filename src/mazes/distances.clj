@@ -6,10 +6,6 @@
 (s/def ::distances? map?)
 (s/def ::distance? int?)
 
-(defn step-key
-  [step]
-  (:coords step))
-
 (defn set-distance
   "Set distance for `coords` in `distances` to `value`"
   [distances coords value]
@@ -73,21 +69,21 @@
          (s/valid? ::gr/coord-list coords)
          (s/valid? ::distance? distance)]}
    ;; :post [(s/valid? ::gr/coords %)]}
-  (if-let [neighbour (first (filter #(< (get-distance distances %) distance) coords))]
-    {:coords neighbour :distance (get-distance distances neighbour)}))
+  (first (filter #(< (get-distance distances %) distance) coords)))
 
 (defn build-path
   "Recursively generate a list of coordinates from `curr` to `goal` in `maze`"
   [path distances maze curr goal]
-  (if (= (step-key curr) goal)
+  (if (= curr goal)
     path
     (let [next-step (find-closer-neighbour distances
-                                           (gr/get-cell-links maze (step-key curr))
-                                           (get-distance distances (step-key curr)))]
-      (build-path (cons next-step path) distances maze next-step goal))))
+                                           (gr/get-cell-links maze curr)
+                                           (get-distance distances curr))]
+      (build-path (set-distance path next-step (get-distance distances next-step))
+                  distances maze next-step goal))))
 
 ;; TODO validate that start > 0,0
-;; Tidy up start-step and step-key
+;; TODO tidy up long functions here
 (defn shortest-path
   "Find the shortest path in `maze` from `start` to `goal`"
   [maze start goal]
@@ -95,9 +91,10 @@
          (s/valid? ::gr/coords start)
          (s/valid? ::gr/coords goal)]}
    ;; :post [(s/valid? ::gr/coord-list %)]}
-  (let [distances (dijkstra maze goal)
-        start-step (hash-map :coords start :distance (get-distance distances start))]
-    (build-path (list start-step) distances maze start-step goal)))
+  (let [path (init-distances maze)
+        distances (dijkstra maze goal)
+        starting-distance (get-distance distances start)]
+    (build-path (set-distance path start starting-distance) distances maze start goal)))
 
 ;; (defn furthest-cell [distances]
 ;;   (key (apply max-key val distances)))
