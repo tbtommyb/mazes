@@ -35,3 +35,14 @@
                 [2 0] 6
                 [2 1] 5
                 [2 2] 4}))))))
+
+(deftest shortest-path-test
+  (testing "Find the correct shortest path from start to goal"
+    (binding [gen/*rnd* (java.util.Random. 3)]
+      (let [maze (algo/sidewinder (gr/init 3 3))]
+        (is (= (dist/shortest-path maze [2 2] [0 0])
+               '([0 0]
+                 [0 1]
+                 [1 1]
+                 [1 2]
+                 [2 2])))))))

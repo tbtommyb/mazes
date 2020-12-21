@@ -62,20 +62,35 @@
   (-> (init-distances grid)
       (iter-dijkstra grid start)))
 
-;; (defn closer-neighbour [distances cells distance]
-;;   (first (filter #(< (get-distance distances %) distance) cells)))
+(defn find-closer-neighbour
+  "Find the first of `cells` with a distance less than `distance`"
+  [distances coords distance]
+  {:pre [(s/valid? ::distances? distances)
+         (s/valid? ::gr/coord-list coords)
+         (s/valid? ::distance? distance)]
+   :post [(s/valid? ::gr/coords %)]}
+  (first (filter #(< (get-distance distances %) distance) coords)))
 
-;; (defn path-between-helper [crumbs distances maze curr goal]
-;;   (if (= curr goal)
-;;     crumbs
-;;     (let [next-step (closer-neighbour distances
-;;                                       (gr/get-linked-cells maze curr)
-;;                                       (get-distance distances curr))]
-;;           (path-between-helper (cons next-step crumbs) distances maze next-step goal))))
+(defn build-path
+  "Recursively generate a list of coordinates from `curr` to `goal` in `maze`"
+  [path distances maze curr goal]
+  (if (= curr goal)
+    path
+    (let [next-step (find-closer-neighbour distances
+                                           (gr/get-cell-links maze curr)
+                                           (get-distance distances curr))]
+      (build-path (cons next-step path) distances maze next-step goal))))
 
-;; ;; TODO validate that start > 0,0
-;; (defn shortest-path [distances maze start goal]
-;;   (path-between-helper (list start) distances maze start goal))
+;; TODO validate that start > 0,0
+(defn shortest-path
+  "Find the shortest path in `maze` from `start` to `goal`"
+  [maze start goal]
+  {:pre [(s/valid? ::gr/grid? maze)
+         (s/valid? ::gr/coords start)
+         (s/valid? ::gr/coords goal)]
+   :post [(s/valid? ::gr/coord-list %)]}
+  (let [distances (dijkstra maze goal)]
+    (build-path (list start) distances maze start goal)))
 
 ;; (defn furthest-cell [distances]
 ;;   (key (apply max-key val distances)))
