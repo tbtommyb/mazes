@@ -200,7 +200,7 @@
        (and bidirectional (some? reverse)) (link-cell-towards dest reverse)))))
 
 ;; TODO: use a seq?
-(defn get-cell-neighbours
+(defn get-neighbouring-coords
   "In `grid` get neighbours of cell at `coords` in `directions`"
   [grid coords directions]
   {:pre [(s/valid? ::grid? grid)
@@ -212,6 +212,12 @@
              %1)
           []
           directions))
+
+(defn get-all-neighbouring-cells
+  "In `grid` get all cells neighbouring `coords`"
+  [grid coords]
+  (map (partial get-cell grid)
+       (get-neighbouring-coords grid coords '(:north :east :south :west))))
 
 ;; TODO: use a seq?
 (defn get-cell-links

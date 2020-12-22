@@ -9,7 +9,7 @@
   [grid]
   {:pre [(s/valid? ::gr/grid? grid)]
    :post [(s/valid? ::gr/grid? %)]}
-  (reduce #(if-let [neighbours (not-empty (gr/get-cell-neighbours %1 %2 '(:north :east)))]
+  (reduce #(if-let [neighbours (not-empty (gr/get-neighbouring-coords %1 %2 '(:north :east)))]
              (gr/link-cells %1 %2 (gen/rand-nth neighbours))
              %1)
           grid
@@ -63,3 +63,21 @@
    :post [(s/valid? ::gr/grid? %)]}
   (let [runs (mapcat #(generate-runs grid %) (gr/iter-rows-coords grid))]
     (reduce connect-run grid runs)))
+
+(defn aldous-broder
+  "Generate links in `grid` using Aldous-Broder algorithm"
+  [grid]
+  {:pre [(s/valid? ::gr/grid? grid)]
+   :post [(s/valid? ::gr/grid? %)]}
+  (loop [maze grid
+         unvisited (dec (* (:cols grid) (:rows grid)))
+         coords (gen/rand-nth (gr/iter-coords grid))]
+    (if (not (pos-int? unvisited))
+      maze
+      (let [neighbour (gen/rand-nth (gr/get-all-neighbouring-cells maze coords))]
+        (if (empty? (:links neighbour))
+          (recur
+           (gr/link-cells maze coords (gr/grid-key neighbour))
+           (dec unvisited)
+           (gr/grid-key neighbour))
+          (recur maze unvisited (gr/grid-key neighbour)))))))

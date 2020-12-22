@@ -102,12 +102,12 @@
                       [1 1] #{}}})))))
 
 
-(deftest get-cell-neighbours-test
+(deftest get-neighbouring-coords-test
   (testing "Find coords of cells adjacent to a given cell"
     (let [grid (init 2 2)]
-      (is (= (get-cell-neighbours grid [0 0] '(:north :south :east :west))
+      (is (= (get-neighbouring-coords grid [0 0] '(:north :south :east :west))
              [[0 1] [1 0]]))
-      (is (= (get-cell-neighbours grid [0 0] '()) [])))))
+      (is (= (get-neighbouring-coords grid [0 0] '()) [])))))
 
 (deftest get-cell-links-test
   (testing "Creating a grid"

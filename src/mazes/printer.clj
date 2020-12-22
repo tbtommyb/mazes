@@ -90,7 +90,7 @@
         x2 (* cell-size (+ 1 x))
         y2 (- grid-height (* cell-size (+ 1 y)))
         colour (background-colour-for distances [x y])]
-    [:dali/align {:axis :left}
+    [:dali/page
      [:line {:stroke (if (link? :south) colour :black)} [x1 y1] [x2 y1]]
      [:line {:stroke (if (link? :west) colour :black)} [x1 y1] [x1 y2]]]))
 
