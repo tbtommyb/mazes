@@ -81,3 +81,42 @@
            (dec unvisited)
            (gr/grid-key neighbour))
           (recur maze unvisited (gr/grid-key neighbour)))))))
+
+(defn coll-contains?
+  [x coll]
+  (some #(= x %) coll))
+
+(defn walk-loop-erased-path
+  [grid coords unvisited]
+  {:pre [(s/valid? ::gr/grid? grid)
+         (s/valid? ::gr/coords coords)
+         (s/valid? ::gr/coord-list unvisited)]
+   :post [(s/valid? ::gr/coord-list %)]}
+  (loop [curr coords
+         path (list curr)]
+    (if (coll-contains? curr unvisited)
+      (if (coll-contains? curr path)
+        (recur
+               (gen/rand-nth (gr/get-all-neighbouring-coords grid curr))
+               (drop-while #(not= % curr) path))
+        (recur
+               (gen/rand-nth (gr/get-all-neighbouring-coords grid curr))
+               (cons curr path)))
+      path)))
+
+(defn wilson
+  "Generate links in `grid` using Wilson's algorithm"
+  [grid]
+  {:pre [(s/valid? ::gr/grid? grid)]
+   :post [(s/valid? ::gr/grid? %)]}
+  (loop [maze grid
+         unvisited (remove #{(gen/rand-nth (gr/iter-coords grid))} (gr/iter-coords grid))
+         curr (gen/rand-nth unvisited)]
+    (if (empty? unvisited)
+      maze
+      (let [new-steps (walk-loop-erased-path maze curr unvisited)
+            new-unvisited (remove (set new-steps) unvisited)]
+        (recur (link-east maze new-steps)
+               new-unvisited
+               (when (not (empty? new-unvisited))
+                 (gen/rand-nth new-unvisited)))))))

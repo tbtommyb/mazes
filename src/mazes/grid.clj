@@ -213,6 +213,11 @@
           []
           directions))
 
+(defn get-all-neighbouring-coords
+  "In `grid` get all coords of cells neighbouring `coords`"
+  [grid coords]
+  (get-neighbouring-coords grid coords '(:north :east :south :west)))
+
 (defn get-all-neighbouring-cells
   "In `grid` get all cells neighbouring `coords`"
   [grid coords]
