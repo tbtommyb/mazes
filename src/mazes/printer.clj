@@ -59,49 +59,70 @@
   (print (str/join "" ascii-output)))
 
 ;; images
-;; (def cell-size 50)
+(def cell-size 50)
 
-;; (defn background-colour-for [distances cell]
-;;   (if (nil? distances)
-;;     :white
-;;     (let [distance (dist/get-distance distances cell)
-;;           furthest (apply max (vals distances))
-;;           intensity (/ (float (- furthest distance)) furthest)
-;;           dark (int (* 255 intensity))
-;;           bright (int (+ (* 127 intensity) 128))]
-;;       (format "rgb(%d,%d,%d)" dark bright dark))))
+(defn background-colour-for
+  "Select the background colour for `coords` based on `distances` or default white"
+  [distances coords]
+  {:pre [(s/valid? (s/nilable ::dist/distances?) distances)
+         (s/valid? ::gr/coords coords)]}
+  (if (nil? distances)
+    :white
+    (let [distance (dist/get-distance distances coords)
+          furthest (apply max (vals distances))
+          intensity (/ (float (- furthest distance)) furthest)
+          dark (int (* 255 intensity))
+          bright (int (+ (* 127 intensity) 128))]
+      (format "rgb(%d,%d,%d)" dark bright dark))))
 
-;; (defn svg-print-cell [height distances cell]
-;;   (let [coords (first (keys cell))
-;;         link? (partial gr/cell-has-link? (first (vals cell)))
-;;         x1 (* cell-size (first coords))
-;;         y1 (- height (* cell-size (second coords)))
-;;         x2 (* cell-size (+ 1 (first coords)))
-;;         y2 (- height (* cell-size (+ 1 (second coords))))
-;;         colour (background-colour-for distances coords)]
-;;     [:dali/align {:axis :left}
-;;      [:line {:stroke (if (link? :south) colour :black)} [x1 y1] [x2 y1]]
-;;      [:line {:stroke (if (link? :west) colour :black)} [x1 y1] [x1 y2]]]))
+(defn svg-cell
+  "Generate an SVG representation of a single `cell` in grid of `grid-height` coloured using `distancess`"
+  [grid-height distances cell]
+  {:pre [(s/valid? pos-int? grid-height)
+         (s/valid? (s/nilable ::dist/distances?) distances)
+         (s/valid? ::gr/cell? cell)]}
+  (let [[x y] (gr/grid-key cell)
+        link? (partial gr/cell-has-link? cell)
+        x1 (* cell-size x)
+        y1 (- grid-height (* cell-size y))
+        x2 (* cell-size (+ 1 x))
+        y2 (- grid-height (* cell-size (+ 1 y)))
+        colour (background-colour-for distances [x y])]
+    [:dali/align {:axis :left}
+     [:line {:stroke (if (link? :south) colour :black)} [x1 y1] [x2 y1]]
+     [:line {:stroke (if (link? :west) colour :black)} [x1 y1] [x1 y2]]]))
 
-;; (defn svg-print-cell-background [height distances cell]
-;;   (let [coords (first (keys cell))
-;;         x1 (* cell-size (first coords))
-;;         y2 (- height (* cell-size (+ 1 (second coords))))
-;;         colour (background-colour-for distances coords)]
-;;     [:rect {:stroke colour :fill colour}
-;;      [x1 y2] [cell-size cell-size]]))
+(defn svg-cell-background
+  "Generate an SVG representation of a single `cell` background in grid of `grid-height` coloured using `distancess`"
+  [grid-height distances cell]
+  {:pre [(s/valid? pos-int? grid-height)
+         (s/valid? (s/nilable ::dist/distances?) distances)
+         (s/valid? ::gr/cell? cell)]}
+  (let [[x y] (gr/grid-key cell)
+        x1 (* cell-size x)
+        y2 (- grid-height (* cell-size (+ 1 y)))
+        colour (background-colour-for distances [x y])]
+    [:rect {:stroke colour :fill colour}
+     [x1 y2] [cell-size cell-size]]))
 
-;; (defn svg-print [grid distances]
-;;   (let [width (* (:cols grid) cell-size)
-;;         height (* (:rows grid) cell-size)]
-;;     [:dali/page {:width width :height height}
-;;      [:rect {:fill :white}
-;;       [0 0] [width height]]
-;;      (map (partial svg-print-cell-background height distances) (gr/iter-grid-links grid))
-;;      (map (partial svg-print-cell height distances) (gr/iter-grid-links grid))]))
+(defn to-svg
+  "Generate an SVG representation of `grid` and optionally `distances`"
+  [grid distances]
+  {:pre [(s/valid? ::gr/grid? grid)
+         (s/valid? (s/nilable ::dist/distances?) distances)]}
+  (let [width (* (:cols grid) cell-size)
+        height (* (:rows grid) cell-size)]
+    [:dali/page {:width width :height height}
+     [:rect {:fill :white} [0 0] [width height]]
+     (map (partial svg-cell-background height distances) (gr/iter-cells grid))
+     (map (partial svg-cell height distances) (gr/iter-cells grid))]))
 
-;; (defn png [grid distances]
-;;   (io/render-png (svg-print grid distances) "output.png"))
+(defn png-out
+  [grid & [opt]]
+  (let [distances (:distances opt)]
+    (io/render-png (to-svg grid distances) "output.png")))
 
-;; (defn svg [grid distances]
-;;   (io/render-svg (svg-print grid distances) "output.svg"))
+(defn svg-out
+  [grid & [opt]]
+  (let [distances (:distances opt)]
+    (io/render-svg (to-svg grid distances) "output.svg")))

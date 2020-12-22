@@ -50,7 +50,13 @@ mazes.core> (pr/out (pr/ascii-grid (algo/sidewinder (gr/init 10 10))))
 +   +---+   +   +   +---+---+   +   +---+
 |       |   |   |           |   |       |
 +---+---+---+---+---+---+---+---+---+---+
+
+mazes.core> (def maze (algo/sidewinder (gr/init 12 12)))
+mazes.core> (def dist (dist/dijkstra maze [0 0]))
+mazes.core> (pr/png-out maze {:distances dist})
 ```
+
+![Sidewinder coloured](https://github.com/tbtommyb/mazes/blob/spec-refactor/images/sidewinder.png?raw=true)
 
 ## License
 
