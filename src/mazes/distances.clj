@@ -73,17 +73,16 @@
 
 (defn build-path
   "Recursively generate a list of coordinates from `curr` to `goal` in `maze`"
-  [path distances maze curr goal]
+  [maze distances path curr goal]
   (if (= curr goal)
     path
     (let [next-step (find-closer-neighbour distances
                                            (gr/get-cell-links maze curr)
-                                           (get-distance distances curr))]
-      (build-path (set-distance path next-step (get-distance distances next-step))
-                  distances maze next-step goal))))
+                                           (get-distance distances curr))
+          next-path (set-distance path next-step (get-distance distances next-step))]
+      (build-path maze distances next-path next-step goal))))
 
 ;; TODO validate that start > 0,0
-;; TODO tidy up long functions here
 (defn shortest-path
   "Find the shortest path in `maze` from `start` to `goal`"
   [maze start goal]
@@ -91,10 +90,11 @@
          (s/valid? ::gr/coords start)
          (s/valid? ::gr/coords goal)]}
    ;; :post [(s/valid? ::gr/coord-list %)]}
-  (let [path (init-distances maze)
-        distances (dijkstra maze goal)
-        starting-distance (get-distance distances start)]
-    (build-path (set-distance path start starting-distance) distances maze start goal)))
+  (let [distances (dijkstra maze goal)
+        starting-distance (get-distance distances start)
+        path (-> (init-distances maze)
+                 (set-distance start starting-distance))]
+    (build-path maze distances path start goal)))
 
 ;; (defn furthest-cell [distances]
 ;;   (key (apply max-key val distances)))
