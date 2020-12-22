@@ -40,7 +40,7 @@
   (testing "Find the correct shortest path from start to goal"
     (binding [gen/*rnd* (java.util.Random. 3)]
       (let [maze (algo/sidewinder (gr/init 3 3))]
-        (is (= (dist/shortest-path maze [2 2] [0 0])
+        (is (= (dist/shortest-path maze [0 0] [2 2])
                {[2 2] 4
                 [0 0] 0
                 [1 0] 2147483647

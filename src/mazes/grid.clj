@@ -25,6 +25,11 @@
 (s/def ::grid? (s/keys :req-un [::rows ::cols ::cells]))
 (s/def ::cell? (s/keys :req-un [::coords ::links]))
 (s/def ::cell-list? (s/coll-of ::cell?))
+(s/def ::bounded-coords? (fn [[maze coords]]
+                           (and (>= (first coords) 0)
+                                (>= (second coords) 0)
+                                (< (first coords) (:cols maze))
+                                (< (second coords) (:rows maze)))))
 
 (defn all-coords-for
   "Generate every coordinate for grid of size `rows` by `cols`"

@@ -71,30 +71,27 @@
    :post [(s/valid? ::gr/coords %)]}
   (first (filter #(< (get-distance distances %) distance) coords)))
 
-(defn build-path
-  "Recursively generate a list of coordinates from `curr` to `goal` in `maze`"
-  [maze distances path curr goal]
-  (if (= curr goal)
-    path
-    (let [next-step (find-closer-neighbour distances
-                                           (gr/get-cell-links maze curr)
-                                           (get-distance distances curr))
-          next-path (set-distance path next-step (get-distance distances next-step))]
-      (build-path maze distances next-path next-step goal))))
-
-;; TODO validate that start > 0,0
 (defn shortest-path
   "Find the shortest path in `maze` from `start` to `goal`"
   [maze start goal]
   {:pre [(s/valid? ::gr/grid? maze)
          (s/valid? ::gr/coords start)
-         (s/valid? ::gr/coords goal)]
+         (s/valid? ::gr/coords goal)
+         (s/valid? ::gr/bounded-coords? [maze goal])
+         (s/valid? ::gr/bounded-coords? [maze start])]
    :post [(s/valid? ::distances? %)]}
-  (let [distances (dijkstra maze goal)
-        starting-distance (get-distance distances start)
-        path (-> (init-distances maze)
-                 (set-distance start starting-distance))]
-    (build-path maze distances path start goal)))
+  (let [distances-to-goal (dijkstra maze goal)
+        distances-from-start (dijkstra maze start)
+        path (-> (init-distances maze) (set-distance start 0))]
+    (letfn [(build-path [path curr]
+              (if (= curr goal)
+                path
+                (let [next-step (find-closer-neighbour distances-to-goal
+                                                       (gr/get-cell-links maze curr)
+                                                       (get-distance distances-to-goal curr))
+                      next-path (set-distance path next-step (get-distance distances-from-start next-step))]
+                  (build-path next-path next-step))))]
+      (build-path path start))))
 
 (defn furthest-coords
   "Find the coordinates of the furthest cell in `distances`"
@@ -108,6 +105,6 @@
   [maze]
   {:pre [(s/valid? ::gr/grid? maze)]
    :post [(s/valid? ::distances? %)]}
-  (let [start (furthest-coords (dijkstra maze [0 0]))
-        goal (furthest-coords (dijkstra maze start))]
+  (let [goal (furthest-coords (dijkstra maze [0 0]))
+        start (furthest-coords (dijkstra maze goal))]
     (shortest-path maze start goal)))
