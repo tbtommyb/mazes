@@ -36,23 +36,25 @@
     (concat top-wall
          (mapcat #(ascii-row % cell-renderer) (reverse (gr/iter-rows-cells grid))))))
 
-(defn ascii-grid
-  "Print an ASCII representation of `grid`"
-  [grid]
-  {:pre [(s/valid? ::gr/grid? grid)]}
-  (ascii-grid-renderer grid (fn [cell] " ")))
+(defn cell-renderer
+  "Generate a text representation of cell, optionally using `distances`"
+  [distances cell]
+  {:pre [(s/valid? (s/nilable ::dist/distances?) distances)
+         (s/valid? ::gr/cell? cell)]}
+  (if (nil? distances)
+    " "
+    (let [distance (dist/get-distance distances (gr/grid-key cell))]
+      (if (< distance Integer/MAX_VALUE)
+        (Integer/toString distance 36)
+        " "))))
 
-(defn ascii-distances
+(defn ascii-grid
   "Print an ASCII representation of `grid` with `distances`"
-  [grid distances]
+  [grid & [opt]]
   {:pre [(s/valid? ::gr/grid? grid)
-         (s/valid? ::dist/distances? distances)]}
-  (let [cell-renderer (fn [cell]
-                        (let [distance (dist/get-distance distances (gr/grid-key cell))]
-                          (if (< distance Integer/MAX_VALUE)
-                            (Integer/toString distance 36)
-                            " ")))]
-    (ascii-grid-renderer grid cell-renderer)))
+         (s/valid? (s/nilable ::dist/distances?) (:distances opt))]}
+   (let [distances (:distances opt)]
+     (ascii-grid-renderer grid (partial cell-renderer distances))))
 
 (defn out
   [ascii-output]

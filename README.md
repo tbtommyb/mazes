@@ -52,7 +52,7 @@ mazes.core> (pr/out (pr/ascii-grid (algo/sidewinder (gr/init 10 10))))
 +---+---+---+---+---+---+---+---+---+---+
 
 mazes.core> (def maze (algo/sidewinder (gr/init 8 8)))
-mazes.core> (pr/out (pr/ascii-distances maze (dist/longest-path maze)))
+mazes.core> (pr/out (pr/ascii-grid maze {:distances (dist/longest-path maze)}))
 +---+---+---+---+---+---+---+---+
 | f   g   h   i   j   k   l     |
 +   +---+---+   +   +---+   +---+
