@@ -26,7 +26,7 @@
     (binding [gen/*rnd* (java.util.Random. 3)]
       (let [maze (algo/sidewinder (gr/init 3 3))
             distances (dist/dijkstra maze [0 0])]
-        (is (= (ascii-distances maze distances)
+        (is (= (ascii-grid maze {:distances distances})
                '("+" "---+" "---+" "---+" "\n"
                  "|" " 4  " " 3  " " 4 |" "\n"
                  "+" "---+" "   +" "   +" "\n"
@@ -35,18 +35,17 @@
                  "|" " 0 |" " 3 |" " 6 |" "\n"
                  "+" "---+" "---+" "---+" "\n")))))))
 
-;; ;; TODO start user-input x and y from 1
-;; (deftest ascii-path-smoke-test
-;;   (testing "A simple shortest path renders correctly"
-;;     (binding [gen/*rnd* (java.util.Random. 3)]
-;;       (let [maze (algo/sidewinder (gr/init 3 4))
-;;             distances (dist/dijkstra maze 0 0)
-;;             path (dist/shortest-path distances maze (gr/get-cell maze 3 2) (gr/get-cell maze 0 0))]
-;;         (is (= (pr/str-distances-path maze distances path)
-;;                (str "+---+---+---+---+\n"
-;;                     "| 2   3   4   5 |\n"
-;;                     "+   +---+---+---+\n"
-;;                     "| 1             |\n"
-;;                     "+   +   +   +   +\n"
-;;                     "| 0 |   |   |   |\n"
-;;                     "+---+---+---+---+\n")))))))
+(deftest ascii-path-test
+  (testing "A simple path renders correctly"
+    (binding [gen/*rnd* (java.util.Random. 3)]
+      (let [maze (algo/sidewinder (gr/init 4 4))]
+        (is (= (ascii-grid maze {:distances (dist/longest-path maze)})
+               '("+" "---+" "---+" "---+" "---+" "\n"
+                 "|" "    " " 4  " " 5  " " 6 |" "\n"
+                 "+" "---+" "   +" "   +" "   +" "\n"
+                 "|" " 2  " " 3 |" "   |" " 7 |" "\n"
+                 "+" "   +" "   +" "---+" "   +" "\n"
+                 "|" " 1 |" "   |" " 9  " " 8 |" "\n"
+                 "+" "   +" "   +" "   +" "   +" "\n"
+                 "|" " 0 |" "   |" " a |" "   |" "\n"
+                 "+" "---+" "---+" "---+" "---+" "\n")))))))
