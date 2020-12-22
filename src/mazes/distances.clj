@@ -53,12 +53,12 @@
     (iter-helper distances (list start) 0)))
 
 ;; TODO: validate start is within bounds of grid
-;;       distance validation
 (defn dijkstra
   "Determine the distance of every cell in `grid` from `start`"
   [grid start]
   {:pre [(s/valid? ::gr/grid? grid)
-         (s/valid? ::gr/coords start)]}
+         (s/valid? ::gr/coords start)]
+   :post [(s/valid? ::distances? %)]}
   (-> (init-distances grid)
       (iter-dijkstra grid start)))
 
@@ -67,8 +67,8 @@
   [distances coords distance]
   {:pre [(s/valid? ::distances? distances)
          (s/valid? ::gr/coord-list coords)
-         (s/valid? ::distance? distance)]}
-   ;; :post [(s/valid? ::gr/coords %)]}
+         (s/valid? ::distance? distance)]
+   :post [(s/valid? ::gr/coords %)]}
   (first (filter #(< (get-distance distances %) distance) coords)))
 
 (defn build-path
@@ -88,14 +88,26 @@
   [maze start goal]
   {:pre [(s/valid? ::gr/grid? maze)
          (s/valid? ::gr/coords start)
-         (s/valid? ::gr/coords goal)]}
-   ;; :post [(s/valid? ::gr/coord-list %)]}
+         (s/valid? ::gr/coords goal)]
+   :post [(s/valid? ::distances? %)]}
   (let [distances (dijkstra maze goal)
         starting-distance (get-distance distances start)
         path (-> (init-distances maze)
                  (set-distance start starting-distance))]
     (build-path maze distances path start goal)))
 
-;; (defn furthest-cell [distances]
-;;   (key (apply max-key val distances)))
+(defn furthest-coords
+  "Find the coordinates of the furthest cell in `distances`"
+  [distances]
+  {:pre [(s/valid? ::distances? distances)]
+   :post [(s/valid? ::gr/coords %)]}
+  (key (apply max-key val distances)))
 
+(defn longest-path
+  "Find the longest path within `maze`"
+  [maze]
+  {:pre [(s/valid? ::gr/grid? maze)]
+   :post [(s/valid? ::distances? %)]}
+  (let [start (furthest-coords (dijkstra maze [0 0]))
+        goal (furthest-coords (dijkstra maze start))]
+    (shortest-path maze start goal)))

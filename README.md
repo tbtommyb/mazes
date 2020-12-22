@@ -51,6 +51,26 @@ mazes.core> (pr/out (pr/ascii-grid (algo/sidewinder (gr/init 10 10))))
 |       |   |   |           |   |       |
 +---+---+---+---+---+---+---+---+---+---+
 
+mazes.core> (def maze (algo/sidewinder (gr/init 8 8)))
+mazes.core> (pr/out (pr/ascii-distances maze (dist/longest-path maze)))
++---+---+---+---+---+---+---+---+
+| f   g   h   i   j   k   l     |
++   +---+---+   +   +---+   +---+
+| e   d   c |   |   |     m     |
++   +   +   +---+---+---+   +---+
+|   |   | b   a   9 |     n     |
++---+   +---+---+   +   +   +   +
+|       |     7   8 |   | o |   |
++   +   +   +   +   +---+   +   +
+|   |   |   | 6 |       | p |   |
++   +---+   +   +---+---+   +   +
+|   |       | 5     | r   q |   |
++---+   +---+   +---+   +   +---+
+|       | 3   4     | s |       |
++   +   +   +---+---+   +---+   +
+|   |   | 2   1   0 | t   u |   |
++---+---+---+---+---+---+---+---+
+
 mazes.core> (def maze (algo/sidewinder (gr/init 12 12)))
 mazes.core> (def dist (dist/dijkstra maze [0 0]))
 mazes.core> (pr/png-out maze {:distances dist})
