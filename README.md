@@ -76,7 +76,7 @@ mazes.core> (def dist (dist/dijkstra maze [0 0]))
 mazes.core> (pr/png-out maze {:distances dist})
 ```
 
-![Sidewinder coloured](https://github.com/tbtommyb/mazes/blob/spec-refactor/images/sidewinder.png?raw=true)
+![Sidewinder coloured](https://github.com/tbtommyb/mazes/blob/master/images/sidewinder.png?raw=true)
 
 ## License
 
