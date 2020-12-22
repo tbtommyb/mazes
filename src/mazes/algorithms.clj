@@ -93,16 +93,16 @@
          (s/valid? ::gr/coord-list unvisited)]
    :post [(s/valid? ::gr/coord-list %)]}
   (loop [curr coords
-         path (list curr)]
+         path '()]
     (if (coll-contains? curr unvisited)
       (if (coll-contains? curr path)
         (recur
-               (gen/rand-nth (gr/get-all-neighbouring-coords grid curr))
-               (drop-while #(not= % curr) path))
+         (gen/rand-nth (gr/get-all-neighbouring-coords grid curr))
+         (drop-while #(not= % curr) path))
         (recur
-               (gen/rand-nth (gr/get-all-neighbouring-coords grid curr))
-               (cons curr path)))
-      path)))
+         (gen/rand-nth (gr/get-all-neighbouring-coords grid curr))
+         (cons curr path)))
+      (cons curr path))))
 
 (defn wilson
   "Generate links in `grid` using Wilson's algorithm"
