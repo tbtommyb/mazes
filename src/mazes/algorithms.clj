@@ -92,17 +92,25 @@
          (s/valid? ::gr/coords coords)
          (s/valid? ::gr/coord-list unvisited)]
    :post [(s/valid? ::gr/coord-list %)]}
-  (loop [curr coords
-         path '()]
-    (if (coll-contains? curr unvisited)
-      (if (coll-contains? curr path)
+  (let [cell-visited? #(not (coll-contains? % unvisited))]
+    (loop [curr coords
+           path '()]
+      (if (cell-visited? curr)
+        (cons curr path)
         (recur
-         (gen/rand-nth (gr/get-all-neighbouring-coords grid curr))
-         (drop-while #(not= % curr) path))
-        (recur
-         (gen/rand-nth (gr/get-all-neighbouring-coords grid curr))
-         (cons curr path)))
-      (cons curr path))))
+           (gen/rand-nth (gr/get-all-neighbouring-coords grid curr))
+           (if (coll-contains? curr path)
+             (drop-while #(not= % curr) path)
+             (cons curr path)))))))
+
+(defn remove-rand-nth
+  [coll]
+  (remove #{(gen/rand-nth coll)} coll))
+
+(defn safe-rand-nth
+  [coll]
+  (when (not (empty? coll))
+    (gen/rand-nth coll)))
 
 (defn wilson
   "Generate links in `grid` using Wilson's algorithm"
@@ -110,13 +118,12 @@
   {:pre [(s/valid? ::gr/grid? grid)]
    :post [(s/valid? ::gr/grid? %)]}
   (loop [maze grid
-         unvisited (remove #{(gen/rand-nth (gr/iter-coords grid))} (gr/iter-coords grid))
-         curr (gen/rand-nth unvisited)]
+         unvisited (remove-rand-nth (gr/iter-coords grid))
+         curr (safe-rand-nth unvisited)]
     (if (empty? unvisited)
       maze
-      (let [new-steps (walk-loop-erased-path maze curr unvisited)
-            new-unvisited (remove (set new-steps) unvisited)]
-        (recur (link-east maze new-steps)
-               new-unvisited
-               (when (not (empty? new-unvisited))
-                 (gen/rand-nth new-unvisited)))))))
+      (let [next-steps (walk-loop-erased-path maze curr unvisited)
+            remaining-unvisited (remove (set next-steps) unvisited)]
+        (recur (link-east maze next-steps)
+               remaining-unvisited
+               (safe-rand-nth remaining-unvisited))))))
