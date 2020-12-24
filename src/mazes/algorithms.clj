@@ -23,8 +23,8 @@
       (gr/link-cells grid random-cell northern-neighbour)
       grid)))
 
-(defn link-east
-  "Link every coord in `run` eastwards into `grid`"
+(defn link-path
+  "Link every coord in `run` into `grid`"
   [grid run]
   (reduce (fn [grid [fst snd]] (gr/link-cells grid fst snd))
           grid
@@ -38,7 +38,7 @@
    :post [(s/valid? ::gr/grid? %)]}
   (-> grid
       (link-random-north run)
-      (link-east run)))
+      (link-path run)))
 
 (defn should-close-out?
   "Decide whether `coord` should close the current run"
@@ -124,6 +124,50 @@
       maze
       (let [next-steps (walk-loop-erased-path maze curr unvisited)
             remaining-unvisited (remove (set next-steps) unvisited)]
-        (recur (link-east maze next-steps)
+        (recur (link-path maze next-steps)
                remaining-unvisited
                (safe-rand-nth remaining-unvisited))))))
+
+(defn visited-neighbours
+  [grid coords]
+  (->> (gr/get-all-neighbouring-cells grid coords)
+       (filter gr/cell-visited?)
+       (map gr/grid-key)))
+
+(defn unvisited-neighbours
+  [grid coords]
+  (->> (gr/get-all-neighbouring-cells grid coords)
+       (remove gr/cell-visited?)
+       (map gr/grid-key)))
+
+(defn cell-has-visited-neighbours?
+  [grid coords]
+  (->> (gr/get-all-neighbouring-cells grid coords)
+       (some gr/cell-visited?)))
+
+(defn hunt-for-cell
+  [grid]
+  (->> grid
+      gr/iter-cells
+      (remove gr/cell-visited?)
+      (map gr/grid-key)
+      (filter (partial cell-has-visited-neighbours? grid))
+      first))
+
+(defn hunt-and-kill
+  "Generate links in `grid` using the hunt and kill algorithm"
+  [grid]
+  {:pre [(s/valid? ::gr/grid? grid)]
+   :post [(s/valid? ::gr/grid? %)]}
+  (loop [maze grid
+         curr (safe-rand-nth (gr/iter-coords grid))]
+    (if (nil? curr)
+      maze
+      (if-let [selected-neighbour (safe-rand-nth (unvisited-neighbours maze curr))]
+        (recur (gr/link-cells maze curr selected-neighbour)
+               selected-neighbour)
+        (if-let [new-start (hunt-for-cell maze)]
+          (let [new-neighbour (safe-rand-nth (visited-neighbours maze new-start))]
+            (recur (gr/link-cells maze new-start new-neighbour)
+                   new-start))
+          (recur maze nil))))))

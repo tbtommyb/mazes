@@ -165,6 +165,13 @@
    :post [(s/valid? boolean? %)]}
   (contains? (:links cell) direction))
 
+(defn cell-visited?
+  "Boolean whether `cell` has any links"
+  [cell]
+  {:pre [(s/valid? ::cell? cell)]
+   :post [(s/valid? boolean? %)]}
+  (not (empty? (:links cell))))
+
 (defn direction-between
   "Returns the direction as nilable symbol between `from` and `to`"
   [from to]
