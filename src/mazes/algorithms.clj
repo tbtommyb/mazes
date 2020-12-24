@@ -179,10 +179,9 @@
    :post [(s/valid? ::gr/grid? %)]}
   (loop [maze grid
          visited [(safe-rand-nth (gr/iter-coords grid))]]
-    (if (empty? visited)
-      maze
-      (let [curr (first visited)]
-        (if-let [unvisited-neighbour (safe-rand-nth (unvisited-neighbours maze curr))]
-          (recur (gr/link-cells maze curr unvisited-neighbour)
-                 (conj visited unvisited-neighbour))
-          (recur maze (rest visited)))))))
+    (if-let [curr (first visited)]
+      (if-let [unvisited-neighbour (safe-rand-nth (unvisited-neighbours maze curr))]
+        (recur (gr/link-cells maze curr unvisited-neighbour)
+               (conj visited unvisited-neighbour))
+        (recur maze (rest visited)))
+      maze)))
