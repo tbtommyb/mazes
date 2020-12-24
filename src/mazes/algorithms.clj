@@ -163,11 +163,26 @@
          curr (safe-rand-nth (gr/iter-coords grid))]
     (if (nil? curr)
       maze
-      (if-let [selected-neighbour (safe-rand-nth (unvisited-neighbours maze curr))]
-        (recur (gr/link-cells maze curr selected-neighbour)
-               selected-neighbour)
-        (if-let [new-start (hunt-for-cell maze)]
-          (let [new-neighbour (safe-rand-nth (visited-neighbours maze new-start))]
-            (recur (gr/link-cells maze new-start new-neighbour)
-                   new-start))
-          (recur maze nil))))))
+      (if-let [unvisited-neighbour (safe-rand-nth (unvisited-neighbours maze curr))]
+        (recur (gr/link-cells maze curr unvisited-neighbour)
+               unvisited-neighbour)
+        (if-let [new-curr (hunt-for-cell maze)]
+          (let [visited-neighbour (safe-rand-nth (visited-neighbours maze new-curr))]
+            (recur (gr/link-cells maze new-curr visited-neighbour)
+                   new-curr))
+          maze)))))
+
+(defn recursive-backtracker
+  "Generate links in `grid` using the recursive backtracking algorithm"
+  [grid]
+  {:pre [(s/valid? ::gr/grid? grid)]
+   :post [(s/valid? ::gr/grid? %)]}
+  (loop [maze grid
+         visited [(safe-rand-nth (gr/iter-coords grid))]]
+    (if (empty? visited)
+      maze
+      (let [curr (first visited)]
+        (if-let [unvisited-neighbour (safe-rand-nth (unvisited-neighbours maze curr))]
+          (recur (gr/link-cells maze curr unvisited-neighbour)
+                 (conj visited unvisited-neighbour))
+          (recur maze (rest visited)))))))
