@@ -54,6 +54,7 @@
     (iter-helper distances (list start) 0)))
 
 ;; TODO: validate start is within bounds of grid
+;; TODO: check that start is unmasked
 (defn dijkstra
   "Determine the distance of every cell in `grid` from `start`"
   [grid start]
