@@ -106,7 +106,7 @@
 (defn cell-has-link?
   "Boolean whether the `cell` has a link to `direction`"
   [cell direction]
-  {:pre [(s/valid? ::cell? cell)
+  {:pre [(s/valid? (s/nilable ::cell?) cell)
          (s/valid? ::direction? direction)]
    :post [(s/valid? boolean? %)]}
   (contains? (:links cell) direction))

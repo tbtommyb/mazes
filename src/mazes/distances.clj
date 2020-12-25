@@ -23,6 +23,7 @@
    :post [(s/valid? ::distance? %)]}
   (get distances coords))
 
+;; TODO use function that gets all coords
 (defn init-distances
   "Initialise a `distances` map for `grid`"
   [grid]
@@ -30,7 +31,7 @@
    :post [(s/valid? ::distances? % )]}
   (reduce #(set-distance %1 %2 Integer/MAX_VALUE)
           {}
-          (gr/iter-coords grid)))
+          (gr/all-coords-for (:rows grid) (:cols grid))))
 
 (defn iter-dijkstra
   "Populate `distances` from `start` in `grid`"

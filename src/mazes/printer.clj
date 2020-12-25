@@ -71,10 +71,10 @@
   (if (nil? distances)
     :white
     (let [distance (dist/get-distance distances coords)
-          furthest (apply max (vals distances))
+          furthest (apply max (remove #{Integer/MAX_VALUE} (vals distances)))
           intensity (/ (float (- furthest distance)) furthest)
-          dark (int (* 255 intensity))
-          bright (int (+ (* 127 intensity) 128))]
+          dark (unchecked-int (* 255 intensity))
+          bright (unchecked-int (+ (* 127 intensity) 128))]
       (format "rgb(%d,%d,%d)" dark bright dark))))
 
 (defn svg-cell
@@ -116,7 +116,7 @@
         height (* (:rows grid) cell-size)]
     [:dali/page {:width width :height height}
      [:rect {:fill :white} [0 0] [width height]]
-     (map (partial svg-cell-background height distances) (gr/iter-cells grid))
+     (map (partial svg-cell-background height distances) (apply concat (gr/iter-rows-cells grid)))
      (map (partial svg-cell height distances) (gr/iter-cells grid))]))
 
 (defn png-out
