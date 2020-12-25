@@ -22,6 +22,7 @@
 (s/def ::cols pos-int?)
 (s/def ::cells map?)
 (s/def ::links set?)
+(s/def ::Grid? #(satisfies? Grid %))
 (s/def ::grid? (s/keys :req-un [::rows ::cols ::cells]))
 (s/def ::cell? (s/keys :req-un [::coords ::links]))
 (s/def ::cell-list? (s/coll-of ::cell?))
@@ -31,21 +32,7 @@
                                 (< (first coords) (:cols maze))
                                 (< (second coords) (:rows maze)))))
 
-(defn all-coords-for
-  "Generate every coordinate for grid of size `rows` by `cols`"
-  [rows cols]
-  {:pre [(s/valid? ::rows rows)
-         (s/valid? ::cols cols)]
-   :post [(s/valid? ::coord-list %)]}
-  (for [x (range cols) y (range rows)] [x y]))
-
-(defn grid-key
-  "Create the key to look up `cell`"
-  [cell]
-  {:pre [(s/valid? ::cell? cell)]
-   :post [(s/valid? ::coords %)]}
-  (:coords cell))
-
+;; Base Grid utilities
 (defn init
   "Create a grid of size `rows` * `cols`"
   [rows cols]
@@ -58,6 +45,45 @@
                   {}
                   (all-coords-for rows cols))})
 
+(defn all-coords-for
+  "Generate every coordinate for grid of size `rows` by `cols`"
+  [rows cols]
+  ;; {:pre [(s/valid? ::rows rows)
+  ;;        (s/valid? ::cols cols)]
+  ;;  :post [(s/valid? ::coord-list %)]}
+  (for [x (range cols) y (range rows)] [x y]))
+
+(defn get-cell-simple
+  "Return the cell located in `grid` at `coords`"
+  [grid coords]
+  ;; {:pre [(s/valid? ::coords coords)
+  ;;        (s/valid? ::grid? grid)]
+  ;;  :post [(s/valid? (s/nilable ::cell?) %)]}
+  (when-let [links (get-in grid [:cells coords])]
+    (make-cell coords links)))
+
+;; (defn iter-coords
+;;   "Iterate through `grid` by column, returning each coord"
+;;   [grid]
+;;   ;; {:pre [(s/valid? ::grid? grid)]
+;;   ;;  :post [(s/valid? ::coord-list %)]}
+
+(defn iter-single-row
+  "Create a vector of every coord in row `y` of `grid`"
+  [grid y]
+  {:pre [(s/valid? ::grid? grid)
+         (s/valid? int? y)]
+   :post [(s/valid? ::coord-list %)]}
+  (vec (for [x (range (:cols grid))] [x y])))
+
+;; Cell stuff (to be moved)
+(defn grid-key
+  "Create the key to look up `cell`"
+  [cell]
+  {:pre [(s/valid? ::cell? cell)]
+   :post [(s/valid? ::coords %)]}
+  (:coords cell))
+
 (defn make-cell
   "Make a cell from `coords` and optional `links`"
   ([coords]
@@ -67,15 +93,6 @@
   {:pre [(s/valid? ::coords coords)
          (s/valid? ::links links)]}
    (hash-map :coords coords :links links)))
-
-(defn get-cell
-  "Return the cell located in `grid` at `coords`"
-  [grid coords]
-  {:pre [(s/valid? ::coords coords)
-         (s/valid? ::grid? grid)]
-   :post [(s/valid? (s/nilable ::cell?) %)]}
-  (when-let [links (get-in grid [:cells coords])]
-    (make-cell coords links)))
 
 (defn get-cell-x
   "Return x coordinate of `cell`"
@@ -91,45 +108,71 @@
    :post [(s/valid? int? %)]}
   (get-in cell [:coords 1]))
 
+(defn cell-has-link?
+  "Boolean whether the `cell` has a link to `direction`"
+  [cell direction]
+  {:pre [(s/valid? ::cell? cell)
+         (s/valid? ::direction? direction)]
+   :post [(s/valid? boolean? %)]}
+  (contains? (:links cell) direction))
+
+(defn cell-visited?
+  "Boolean whether `cell` has any links"
+  [cell]
+  {:pre [(s/valid? ::cell? cell)]
+   :post [(s/valid? boolean? %)]}
+  (not (empty? (:links cell))))
+
+;; Protocol-dependent functions
 (defn iter-cells
   "Iterate through `grid` by column, returning each cell"
   [grid]
-  {:pre [(s/valid? ::grid? grid)]
-   :post [(s/valid? ::cell-list? %)]}
-  (map (partial get-cell grid)
-       (all-coords-for (:rows grid) (:cols grid))))
-
-(defn iter-coords
-  "Iterate through `grid` by column, returning each coord"
-  [grid]
-  {:pre [(s/valid? ::grid? grid)]
-   :post [(s/valid? ::coord-list %)]}
-  (all-coords-for (:rows grid) (:cols grid)))
-
-;; TODO: cells or coordinates?
-(defn iter-single-row
-  "Create a vector of every coord in row `y` of `grid`"
-  [grid y]
-  {:pre [(s/valid? ::grid? grid)
-         (s/valid? int? y)]
-   :post [(s/valid? ::coord-list %)]}
-  (vec (for [x (range (:cols grid))] [x y])))
+  ;; {:pre [(s/valid? ::Grid? grid)]
+  ;;  :post [(s/valid? ::cell-list? %)]}
+  (map (partial get-cell grid) (iter-coords grid)))
 
 (defn iter-rows-cells
   "Create a cell seq of every row in `grid`"
   [grid]
-  {:pre [(s/valid? ::grid? grid)]
-   :post [(s/valid? (s/coll-of ::cell-list?) %)]}
+  ;; {:pre [(s/valid? ::Grid? grid)]
+  ;;  :post [(s/valid? (s/coll-of ::cell-list?) %)]}
   (seq (for [y (range (:rows grid))]
-         (map (partial get-cell grid) (iter-single-row grid y)))))
+         (map (partial get-cell-simple grid) (iter-single-row grid y)))))
 
 (defn iter-rows-coords
   "Create a coord vector of every row in `grid`"
   [grid]
-  {:pre [(s/valid? ::grid? grid)]
-   :post [(s/valid? (s/coll-of ::coord-list) %)]}
-  (vec (for [y (range (:rows grid))] (iter-single-row grid y))))
+  ;; {:pre [(s/valid? ::Grid? grid)]
+  ;;  :post [(s/valid? (s/coll-of ::coord-list) %)]}
+  (vec (for [y (range (:rows grid))] (iter-row grid y))))
 
+(defn cell-neighbour-at
+  "Find neighour in `direction` of cell at `coords in `grid`"
+  [grid coords direction]
+  {:pre [(s/valid? ::grid? grid)
+         (s/valid? ::coords coords)
+         (s/valid? ::direction? direction)]
+   :post [(s/valid? (s/nilable ::coords) %)]}
+  (let [neighbour-coords (add-direction-to-coords coords direction)]
+    (when (get-cell grid neighbour-coords)
+      neighbour-coords)))
+
+;; TODO: use a seq?
+(defn get-cell-links
+  "In `grid` get all cells linked to cell at `coords` in `directions`. Default all"
+  ([grid coords] (get-cell-links grid coords directions))
+  ([grid coords dirs]
+   {:pre [(s/valid? ::grid? grid)
+          (s/valid? ::coords coords)
+          (s/valid? (s/coll-of ::direction?) dirs)]
+    :post [(s/valid? ::coord-list %)]}
+   (reduce #(if (cell-has-link? (get-cell grid coords) %2)
+              (conj %1 (cell-neighbour-at grid coords %2))
+              %1)
+           []
+           directions)))
+
+;; Direction stuff
 (defn coords-from-cell
   "Get coordinate of `direction` from `cell`"
   [cell direction]
@@ -145,32 +188,6 @@
          (s/valid? ::direction? direction)]}
   (let [[dx dy] (get dir-step direction)]
     (vector (+ dx (first coords)) (+ dy (second coords)))))
-
-(defn cell-neighbour-at
-  "Find neighour in `direction` of cell at `coords in `grid`"
-  [grid coords direction]
-  {:pre [(s/valid? ::grid? grid)
-         (s/valid? ::coords coords)
-         (s/valid? ::direction? direction)]
-   :post [(s/valid? (s/nilable ::coords) %)]}
-  (let [neighbour-coords (add-direction-to-coords coords direction)]
-    (when (get-cell grid neighbour-coords)
-      neighbour-coords)))
-
-(defn cell-has-link?
-  "Boolean whether the `cell` has a link to `direction`"
-  [cell direction]
-  {:pre [(s/valid? ::cell? cell)
-         (s/valid? ::direction? direction)]
-   :post [(s/valid? boolean? %)]}
-  (contains? (:links cell) direction))
-
-(defn cell-visited?
-  "Boolean whether `cell` has any links"
-  [cell]
-  {:pre [(s/valid? ::cell? cell)]
-   :post [(s/valid? boolean? %)]}
-  (not (empty? (:links cell))))
 
 (defn direction-between
   "Returns the direction as nilable symbol between `from` and `to`"
@@ -231,18 +248,29 @@
   (map (partial get-cell grid)
        (get-neighbouring-coords grid coords '(:north :east :south :west))))
 
-;; TODO: use a seq?
-(defn get-cell-links
-  "In `grid` get all cells linked to cell at `coords` in `directions`. Default all"
-  ([grid coords] (get-cell-links grid coords directions))
-  ([grid coords dirs]
-   {:pre [(s/valid? ::grid? grid)
-          (s/valid? ::coords coords)
-          (s/valid? (s/coll-of ::direction?) dirs)]
-    :post [(s/valid? ::coord-list %)]}
-   (reduce #(if (cell-has-link? (get-cell grid coords) %2)
-              (conj %1 (cell-neighbour-at grid coords %2))
-              %1)
-           []
-           directions)))
+;; PROTOCOL STUFF
+(defprotocol Grid
+  "Grid represents the idea of a grid with accessible cells"
+  (get-cell [this coord]
+    "Gets the cell located at `coord`")
+  (iter-coords [this]
+    "Iterate through every coordinate")
+  (iter-row [this y]
+    "Iterate through row `y` in `this`"))
 
+(defrecord SimpleGrid [rows cols cells]
+  Grid
+  (get-cell [this coord] (get-cell-simple this coord))
+  (iter-coords [this] (all-coords-for rows cols))
+  (iter-row [this y] (iter-single-row this y)))
+
+(defn new-simple-grid
+  "Create a SimpleGrid of `rows` and `cols`"
+  [rows cols]
+  {:pre [(s/valid? ::rows rows)
+         (s/valid? ::cols cols)]
+   :post [(s/valid? ::Grid? %)]}
+  (let [cells (reduce #(assoc %1 %2 (set '()))
+                      {}
+                      (all-coords-for rows cols))]
+    (SimpleGrid. rows cols cells)))

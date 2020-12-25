@@ -59,8 +59,8 @@
 (defn sidewinder
   "Generate links in `grid` using a binary tree algorithm"
   [grid]
-  {:pre [(s/valid? ::gr/grid? grid)]
-   :post [(s/valid? ::gr/grid? %)]}
+  ;; {:pre [(s/valid? ::gr/grid? grid)]
+  ;;  :post [(s/valid? ::gr/grid? %)]}
   (let [runs (mapcat #(generate-runs grid %) (gr/iter-rows-coords grid))]
     (reduce connect-run grid runs)))
 
