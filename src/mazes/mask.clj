@@ -1,6 +1,8 @@
 (ns mazes.mask
   (:require
    [clojure.spec.alpha :as s]
+   [clojure.string :as str]
+   [clojure.java.io :as io]
    [mazes.algorithms :as algo]
    [mazes.grid :as gr]))
 
@@ -59,9 +61,13 @@
     (vec (for [x (range cols) :when (get-bit mask [x y])] [x y]))))
 
 (defn new-masked-grid
-  [rows cols]
-  (let [cells (reduce #(assoc %1 %2 (set '()))
-                      {}
-                      (gr/all-coords-for rows cols))
-        mask (-> (init rows cols) (set-mask-for-coord [1 1] false))]
+  [path]
+  (let [data (str/split (slurp path) #"\n")
+        rows (count data)
+        cols (count (first data))
+        cells (gr/init-cells rows cols)
+        char-at (fn [[x y]] (get (get data (- rows (inc y))) x))
+        mask (reduce #(assoc %1 %2 (not= \X (char-at %2)))
+                     {}
+                     (gr/all-coords-for rows cols))]
     (MaskedGrid. rows cols cells mask)))

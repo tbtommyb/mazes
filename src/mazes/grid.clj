@@ -22,7 +22,6 @@
 (s/def ::cols pos-int?)
 (s/def ::cells map?)
 (s/def ::links set?)
-(s/def ::Grid? #(satisfies? Grid %))
 (s/def ::grid? (s/keys :req-un [::rows ::cols ::cells]))
 (s/def ::cell? (s/keys :req-un [::coords ::links]))
 (s/def ::cell-list? (s/coll-of ::cell?))
@@ -33,24 +32,20 @@
                                 (< (second coords) (:rows maze)))))
 
 ;; Base Grid utilities
-(defn init
+(defn init-cells
   "Create a grid of size `rows` * `cols`"
   [rows cols]
   {:pre [(s/valid? ::rows rows)
          (s/valid? ::cols cols)]
-   :post [(s/valid? ::grid? %)]}
-  {:rows rows
-   :cols cols
-   :cells (reduce #(assoc %1 %2 (set '()))
-                  {}
-                  (all-coords-for rows cols))})
+   :post [(s/valid? ::cells %)]}
+   (reduce #(assoc %1 %2 (set '())) {} (all-coords-for rows cols)))
 
 (defn all-coords-for
   "Generate every coordinate for grid of size `rows` by `cols`"
   [rows cols]
-  ;; {:pre [(s/valid? ::rows rows)
-  ;;        (s/valid? ::cols cols)]
-  ;;  :post [(s/valid? ::coord-list %)]}
+  {:pre [(s/valid? ::rows rows)
+         (s/valid? ::cols cols)]
+   :post [(s/valid? ::coord-list %)]}
   (for [x (range cols) y (range rows)] [x y]))
 
 (defn get-cell-simple
@@ -127,23 +122,24 @@
 (defn iter-cells
   "Iterate through `grid` by column, returning each cell"
   [grid]
-  ;; {:pre [(s/valid? ::Grid? grid)]
-  ;;  :post [(s/valid? ::cell-list? %)]}
+  {:pre [(s/valid? ::grid? grid)]
+   :post [(s/valid? ::cell-list? %)]}
   (map (partial get-cell grid) (iter-coords grid)))
 
+;; TODO: add to protocol
 (defn iter-rows-cells
   "Create a cell seq of every row in `grid`"
   [grid]
-  ;; {:pre [(s/valid? ::Grid? grid)]
-  ;;  :post [(s/valid? (s/coll-of ::cell-list?) %)]}
+  {:pre [(s/valid? ::grid? grid)]
+   :post [(s/valid? (s/coll-of ::cell-list?) %)]}
   (seq (for [y (range (:rows grid))]
          (map (partial get-cell-simple grid) (iter-single-row grid y)))))
 
 (defn iter-rows-coords
   "Create a coord vector of every row in `grid`"
   [grid]
-  ;; {:pre [(s/valid? ::Grid? grid)]
-  ;;  :post [(s/valid? (s/coll-of ::coord-list) %)]}
+  {:pre [(s/valid? ::grid? grid)]
+   :post [(s/valid? (s/coll-of ::coord-list) %)]}
   (vec (for [y (range (:rows grid))] (iter-row grid y))))
 
 (defn cell-neighbour-at
@@ -270,7 +266,4 @@
   {:pre [(s/valid? ::rows rows)
          (s/valid? ::cols cols)]
    :post [(s/valid? ::Grid? %)]}
-  (let [cells (reduce #(assoc %1 %2 (set '()))
-                      {}
-                      (all-coords-for rows cols))]
-    (SimpleGrid. rows cols cells)))
+  (SimpleGrid. rows cols (init-cells rows cols)))
