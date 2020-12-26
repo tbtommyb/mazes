@@ -39,33 +39,12 @@
     "Gets the cell located at `coord` if visible")
   (iter-visible-coords [this]
     "Iterate through every coordinate")
+  (iter-visible-rows-coords [this]
+    "Iterate through every row and return a vector of coords")
   (iter-visible-row-coords [this y]
     "Iterate through row `y` in `this`"))
 
-(defrecord SimpleGrid [rows cols cells]
-  Grid
-  (count-visible-cells [this] (* rows cols))
-  (get-visible-cell [this coord] (get-cell this coord))
-  (iter-visible-coords [this] (all-coords-for rows cols))
-  (iter-visible-row-coords [this y] (iter-row-coords this y)))
-
-(defn new-simple-grid
-  "Create a SimpleGrid of `rows` and `cols`"
-  [rows cols]
-  {:pre [(s/valid? ::rows rows)
-         (s/valid? ::cols cols)]
-   :post [(s/valid? ::Grid? %)]}
-  (SimpleGrid. rows cols (init-cells rows cols)))
-
 ;; Base Grid utilities
-(defn init-cells
-  "Create a grid of size `rows` * `cols`"
-  [rows cols]
-  {:pre [(s/valid? ::rows rows)
-         (s/valid? ::cols cols)]
-   :post [(s/valid? ::cells %)]}
-   (reduce #(assoc %1 %2 (set '())) {} (all-coords-for rows cols)))
-
 (defn all-coords-for
   "Generate every coordinate for grid of size `rows` by `cols`"
   [rows cols]
@@ -74,6 +53,15 @@
    :post [(s/valid? ::coord-list %)]}
   (for [x (range cols) y (range rows)] [x y]))
 
+(defn init-cells
+  "Create a grid of size `rows` * `cols`"
+  [rows cols]
+  {:pre [(s/valid? ::rows rows)
+         (s/valid? ::cols cols)]
+   :post [(s/valid? ::cells %)]}
+   (reduce #(assoc %1 %2 (set '())) {} (all-coords-for rows cols)))
+
+(declare make-cell)
 (defn get-cell
   "Return the cell located in `grid` at `coords`, ignoring visibility"
   [grid coords]
@@ -90,6 +78,13 @@
          (s/valid? int? y)]
    :post [(s/valid? ::coord-list %)]}
   (vec (for [x (range (:cols grid))] [x y])))
+
+(defn iter-rows-coords
+  "Create a vector of every coord by row in `grid`, ignoring visibility"
+  [grid]
+  {:pre [(s/valid? ::grid? grid)]
+   :post [(s/valid? (s/coll-of ::coord-list) %)]}
+  (seq (for [y (range (:rows grid))] (iter-row-coords grid y))))
 
 (defn iter-rows-cells
   "Create a vector of every cell by row in `grid`, ignoring visibility"
@@ -184,6 +179,7 @@
    :post [(s/valid? (s/coll-of ::coord-list) %)]}
   (vec (for [y (range (:rows grid))] (iter-visible-row-coords grid y))))
 
+(declare add-direction-to-coords)
 (defn visible-neighbour-coords
   "Find visible neighbour from `src` in `direction` in `grid`"
   [grid src direction]
@@ -278,3 +274,19 @@
   (map (partial get-cell grid)
        (get-neighbouring-coords grid coords '(:north :east :south :west))))
 
+
+(defrecord SimpleGrid [rows cols cells]
+  Grid
+  (count-visible-cells [this] (* rows cols))
+  (get-visible-cell [this coord] (get-cell this coord))
+  (iter-visible-coords [this] (all-coords-for rows cols))
+  (iter-visible-rows-coords [this] (iter-rows-coords this))
+  (iter-visible-row-coords [this y] (iter-row-coords this y)))
+
+(defn new-simple-grid
+  "Create a SimpleGrid of `rows` and `cols`"
+  [rows cols]
+  {:pre [(s/valid? ::rows rows)
+         (s/valid? ::cols cols)]
+   :post [(s/valid? ::grid? %)]}
+  (SimpleGrid. rows cols (init-cells rows cols)))

@@ -7,21 +7,17 @@
 (deftest binary-tree-test
   (testing "Applying the binary tree algorithm to a grid"
     (binding [gen/*rnd* (java.util.Random. 5)]
-      (is (= (binary-tree (gr/init 2 2))
-             {:rows 2
-              :cols 2
-              :cells {[0 0] #{:east}
-                      [0 1] #{:east}
-                      [1 0] #{:west :north}
-                      [1 1] #{:west :south}}})))))
+      (is (= (binary-tree (gr/new-simple-grid 2 2))
+             (gr/->SimpleGrid 2 2 {[0 0] #{:east}
+                                   [0 1] #{:east}
+                                   [1 0] #{:west :north}
+                                   [1 1] #{:west :south}}))))))
 
 (deftest sidewinder-test
   (testing "Applying the sidewinder algorithm to a grid"
     (binding [gen/*rnd* (java.util.Random. 5)]
-      (is (= (sidewinder (gr/init 2 2))
-             {:rows 2
-              :cols 2
-              :cells {[0 0] #{:north}
-                      [0 1] #{:south :east}
-                      [1 0] #{:north}
-                      [1 1] #{:west :south}}})))))
+      (is (= (sidewinder (gr/new-simple-grid 2 2))
+             (gr/->SimpleGrid 2 2 {[0 0] #{:north}
+                                   [0 1] #{:south :east}
+                                   [1 0] #{:north}
+                                   [1 1] #{:west :south}}))))))

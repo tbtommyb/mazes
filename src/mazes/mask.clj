@@ -4,6 +4,7 @@
    [clojure.string :as str]
    [clojure.java.io :as io]
    [mazes.algorithms :as algo]
+   [mazes.utils :as utils]
    [mazes.grid :as gr]))
 
 (s/def ::mask? map?)
@@ -35,17 +36,21 @@
   [mask]
   {:pre [(s/valid? ::mask? mask)]
    :post [(s/valid? pos-int? %)]}
-  (count (filter true? (vals (:bits mask)))))
+  (count (filter true? (vals mask))))
 
 (defn mask-random-nth
   [mask]
   {:pre [(s/valid? ::mask? mask)]
    :post [(s/valid? ::gr/coords %)]}
-  (algo/safe-rand-nth (gr/iter-visible-coords mask)))
+  (utils/safe-rand-nth (gr/iter-visible-coords mask)))
 
 (defn set-mask-for-coord
   [mask coord value]
   (assoc mask coord value))
+
+(defn iter-visible-row-coords-masked
+  [grid y]
+  (vec (for [x (range (:cols grid)) :when (get-bit grid [x y])] [x y])))
 
 (defrecord MaskedGrid [rows cols cells mask]
   gr/Grid
@@ -54,8 +59,9 @@
     (when (get-bit mask coord) (gr/get-cell this coord)))
   (iter-visible-coords [this]
     (filter (partial get-bit mask) (gr/all-coords-for rows cols)))
-  (iter-visible-row-coords [this y]
-    (vec (for [x (range cols) :when (get-bit mask [x y])] [x y]))))
+  (iter-visible-rows-coords [this]
+    (seq (for [y (range (:rows this))] (iter-visible-row-coords-masked this y))))
+  (iter-visible-row-coords [this y] (iter-visible-row-coords-masked this y)))
 
 (defn new-masked-grid
   [path]

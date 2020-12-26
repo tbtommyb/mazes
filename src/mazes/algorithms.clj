@@ -57,12 +57,13 @@
    :post [(s/valid? (s/coll-of ::gr/coord-list) %)]}
   (partition-by #(should-close-out? grid %) row))
 
+;; TODO doesn't handle invisible cells correctly
 (defn sidewinder
   "Generate links in `grid` using a binary tree algorithm"
   [grid]
   {:pre [(s/valid? ::gr/grid? grid)]
    :post [(s/valid? ::gr/grid? %)]}
-  (let [runs (mapcat #(generate-runs grid %) (gr/iter-visible-row-coords grid))]
+  (let [runs (mapcat #(generate-runs grid %) (gr/iter-rows-coords grid))]
     (reduce connect-run grid runs)))
 
 (defn aldous-broder
@@ -89,14 +90,14 @@
          (s/valid? ::gr/coords coords)
          (s/valid? ::gr/coord-list unvisited)]
    :post [(s/valid? ::gr/coord-list %)]}
-  (let [cell-visited? #(not (coll-contains? % unvisited))]
+  (let [cell-visited? #(not (utils/coll-contains? % unvisited))]
     (loop [curr coords
            path '()]
       (if (cell-visited? curr)
         (cons curr path)
         (recur
            (gen/rand-nth (gr/get-all-neighbouring-coords grid curr))
-           (if (coll-contains? curr path)
+           (if (utils/coll-contains? curr path)
              (drop-while #(not= % curr) path)
              (cons curr path)))))))
 
@@ -142,6 +143,7 @@
       (filter (partial cell-has-visited-neighbours? grid))
       first))
 
+;; TODO broken on mask
 (defn hunt-and-kill
   "Generate links in `grid` using the hunt and kill algorithm"
   [grid]
@@ -166,7 +168,7 @@
   {:pre [(s/valid? ::gr/grid? grid)]
    :post [(s/valid? ::gr/grid? %)]}
   (loop [maze grid
-         visited [(safe-rand-nth (gr/iter-visible-coords grid))]]
+         visited [(utils/safe-rand-nth (gr/iter-visible-coords grid))]]
     (if-let [curr (first visited)]
       (if-let [unvisited-neighbour (utils/safe-rand-nth (unvisited-neighbours maze curr))]
         (recur (gr/link-cells maze curr unvisited-neighbour)

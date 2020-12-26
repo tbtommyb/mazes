@@ -24,7 +24,7 @@
 (deftest ascii-distances-test
   (testing "A simple grid with distances renders correctly"
     (binding [gen/*rnd* (java.util.Random. 3)]
-      (let [maze (algo/sidewinder (gr/init 3 3))
+      (let [maze (algo/sidewinder (gr/new-simple-grid 3 3))
             distances (dist/dijkstra maze [0 0])]
         (is (= (ascii-grid maze {:distances distances})
                '("+" "---+" "---+" "---+" "\n"
@@ -38,7 +38,7 @@
 (deftest ascii-path-test
   (testing "A simple path renders correctly"
     (binding [gen/*rnd* (java.util.Random. 3)]
-      (let [maze (algo/sidewinder (gr/init 4 4))]
+      (let [maze (algo/sidewinder (gr/new-simple-grid 4 4))]
         (is (= (ascii-grid maze {:distances (dist/longest-path maze)})
                '("+" "---+" "---+" "---+" "---+" "\n"
                  "|" "    " " 4  " " 5  " " 6 |" "\n"
