@@ -58,7 +58,7 @@
   (get-visible-cell [this coord]
     (when (get-bit mask coord) (gr/get-cell this coord)))
   (iter-visible-coords [this]
-    (filter (partial get-bit mask) (gr/all-coords-for rows cols)))
+    (filter (partial get-bit mask) (gr/iter-coords this)))
   (iter-visible-rows-coords [this]
     (seq (for [y (range (:rows this))] (iter-visible-row-coords-masked this y))))
   (iter-visible-row-coords [this y] (iter-visible-row-coords-masked this y)))

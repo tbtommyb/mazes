@@ -101,6 +101,13 @@
    :post [(s/valid? ::cell-list? %)]}
   (map (partial get-cell grid) (all-coords-for (:rows grid) (:cols grid))))
 
+(defn iter-coords
+  "Iterate through `grid` by column, returning each coord, ignoring visibility"
+  [grid]
+  {:pre [(s/valid? ::grid? grid)]
+   :post [(s/valid? ::coord-list %)]}
+  (all-coords-for (:rows grid) (:cols grid)))
+
 ;; Cell stuff (to be moved)
 (defn grid-key
   "Create the key to look up `cell`"
@@ -172,12 +179,12 @@
   (seq (for [y (range (:rows grid))]
          (map (partial get-cell grid) (iter-visible-row-coords grid y)))))
 
-(defn iter-visible-rows-coords
-  "Create a coord vector of every row in `grid`"
-  [grid]
-  {:pre [(s/valid? ::grid? grid)]
-   :post [(s/valid? (s/coll-of ::coord-list) %)]}
-  (vec (for [y (range (:rows grid))] (iter-visible-row-coords grid y))))
+;; (defn iter-visible-rows-coords
+;;   "Create a coord vector of every row in `grid`"
+;;   [grid]
+;;   {:pre [(s/valid? ::grid? grid)]
+;;    :post [(s/valid? (s/coll-of ::coord-list) %)]}
+;;   (vec (for [y (range (:rows grid))] (iter-visible-row-coords grid y))))
 
 (declare add-direction-to-coords)
 (defn visible-neighbour-coords

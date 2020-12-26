@@ -5,6 +5,8 @@
    [mazes.utils :as utils]
    [mazes.grid :as gr]))
 
+;; TODO sidewinder and hunt and kill both broken
+
 (defn binary-tree
   "Generate links in `grid` using a binary tree algorithm"
   [grid]
@@ -150,7 +152,7 @@
   {:pre [(s/valid? ::gr/grid? grid)]
    :post [(s/valid? ::gr/grid? %)]}
   (loop [maze grid
-         curr (utils/safe-rand-nth (gr/iter-visible-coords grid))]
+         curr (utils/safe-rand-nth (gr/iter-coords grid))]
     (if (nil? curr)
       maze
       (if-let [unvisited-neighbour (utils/safe-rand-nth (unvisited-neighbours maze curr))]
