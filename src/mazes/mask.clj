@@ -50,7 +50,7 @@
 
 (defn iter-visible-row-coords-masked
   [grid y]
-  (vec (for [x (range (:cols grid)) :when (get-bit grid [x y])] [x y])))
+  (vec (for [x (range (:cols grid)) :when (get-bit (:mask grid) [x y])] [x y])))
 
 (defrecord MaskedGrid [rows cols cells mask]
   gr/Grid
