@@ -41,10 +41,7 @@
   [mask]
   {:pre [(s/valid? ::mask? mask)]
    :post [(s/valid? ::gr/coords %)]}
-  (loop [coords (algo/safe-rand-nth (gr/iter-coords mask))]
-    (if (true? (get-bit mask coords))
-      coords
-      (recur (algo/safe-rand-nth (gr/iter-coords mask))))))
+  (algo/safe-rand-nth (gr/iter-visible-coords mask)))
 
 (defn set-mask-for-coord
   [mask coord value]
@@ -52,12 +49,12 @@
 
 (defrecord MaskedGrid [rows cols cells mask]
   gr/Grid
-  (get-cell [this coord]
-    (when (get-bit mask coord)
-      (gr/get-cell-simple this coord)))
-  (iter-coords [this]
+  (count-visible-cells [this] (mask-count mask))
+  (get-visible-cell [this coord]
+    (when (get-bit mask coord) (gr/get-cell this coord)))
+  (iter-visible-coords [this]
     (filter (partial get-bit mask) (gr/all-coords-for rows cols)))
-  (iter-row [this y]
+  (iter-visible-row-coords [this y]
     (vec (for [x (range cols) :when (get-bit mask [x y])] [x y]))))
 
 (defn new-masked-grid

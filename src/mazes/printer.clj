@@ -116,7 +116,7 @@
         height (* (:rows grid) cell-size)]
     [:dali/page {:width width :height height}
      [:rect {:fill :white} [0 0] [width height]]
-     (map (partial svg-cell-background height distances) (apply concat (gr/iter-rows-cells grid)))
+     (map (partial svg-cell-background height distances) (gr/iter-cells grid))
      (map (partial svg-cell height distances) (gr/iter-cells grid))]))
 
 (defn png-out

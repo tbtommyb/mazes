@@ -1,8 +1,9 @@
 (ns mazes.core
   (:require
-   [mazes.grid :as gr]
-   [mazes.printer :as pr]
-   [mazes.distances :as dist]
    [mazes.algorithms :as algo]
-   [mazes.mask :as mask]))
+   [mazes.distances :as dist]
+   [mazes.grid :as gr]
+   [mazes.mask :as mask]
+   [mazes.printer :as pr]
+   [mazes.utils :as utils]))
 

@@ -2,6 +2,7 @@
   (:require
    [clojure.data.generators :as gen]
    [clojure.spec.alpha :as s]
+   [mazes.utils :as utils]
    [mazes.grid :as gr]))
 
 (defn binary-tree
@@ -10,20 +11,20 @@
   {:pre [(s/valid? ::gr/grid? grid)]
    :post [(s/valid? ::gr/grid? %)]}
   (reduce #(if-let [neighbours (not-empty (gr/get-neighbouring-coords %1 %2 '(:north :east)))]
-             (gr/link-cells %1 %2 (gen/rand-nth neighbours))
+             (gr/link-cells %1 %2 (utils/safe-rand-nth neighbours))
              %1)
           grid
-          (gr/iter-coords grid)))
+          (gr/iter-visible-coords grid)))
 
 (defn link-random-north
   "Link a random cell in `run` to the north"
   [grid run]
-  (let [random-cell (gen/rand-nth run)]
-    (if-let [northern-neighbour (gr/cell-neighbour-at grid random-cell :north)]
+  (let [random-cell (utils/safe-rand-nth run)]
+    (if-let [northern-neighbour (gr/visible-neighbour-coords grid random-cell :north)]
       (gr/link-cells grid random-cell northern-neighbour)
       grid)))
 
-(defn link-path
+(defn link-run
   "Link every coord in `run` into `grid`"
   [grid run]
   (reduce (fn [grid [fst snd]] (gr/link-cells grid fst snd))
@@ -31,21 +32,21 @@
           (partition 2 1 run)))
 
 (defn connect-run
-  "Link `run` into `grid`"
+  "Link `run` into `grid` and add a random northern link"
   [grid run]
   {:pre [(s/valid? ::gr/grid? grid)
          (s/valid? ::gr/coord-list run)]
    :post [(s/valid? ::gr/grid? %)]}
   (-> grid
       (link-random-north run)
-      (link-path run)))
+      (link-run run)))
 
 (defn should-close-out?
   "Decide whether `coord` should close the current run"
   [grid coord]
   {:pre [(s/valid? ::gr/grid? grid)
          (s/valid? ::gr/coords coord)]}
-  (and (not-empty (gr/cell-neighbour-at grid coord :north))
+  (and (not-empty (gr/visible-neighbour-coords grid coord :north))
        (even? (gen/rand-nth '(0 1)))))
 
 (defn generate-runs
@@ -61,7 +62,7 @@
   [grid]
   {:pre [(s/valid? ::gr/grid? grid)]
    :post [(s/valid? ::gr/grid? %)]}
-  (let [runs (mapcat #(generate-runs grid %) (gr/iter-rows-coords grid))]
+  (let [runs (mapcat #(generate-runs grid %) (gr/iter-visible-row-coords grid))]
     (reduce connect-run grid runs)))
 
 (defn aldous-broder
@@ -70,21 +71,17 @@
   {:pre [(s/valid? ::gr/grid? grid)]
    :post [(s/valid? ::gr/grid? %)]}
   (loop [maze grid
-         unvisited (dec (* (:cols grid) (:rows grid)))
-         coords (gen/rand-nth (gr/iter-coords grid))]
+         unvisited (dec (gr/count-visible-cells grid))
+         coords (gen/rand-nth (gr/iter-visible-coords grid))]
     (if (not (pos-int? unvisited))
       maze
-      (let [neighbour (gen/rand-nth (gr/get-all-neighbouring-cells maze coords))]
+      (let [neighbour (utils/safe-rand-nth (gr/get-all-neighbouring-cells maze coords))]
         (if (empty? (:links neighbour))
           (recur
            (gr/link-cells maze coords (gr/grid-key neighbour))
            (dec unvisited)
            (gr/grid-key neighbour))
           (recur maze unvisited (gr/grid-key neighbour)))))))
-
-(defn coll-contains?
-  [x coll]
-  (some #(= x %) coll))
 
 (defn walk-loop-erased-path
   [grid coords unvisited]
@@ -103,30 +100,21 @@
              (drop-while #(not= % curr) path)
              (cons curr path)))))))
 
-(defn remove-rand-nth
-  [coll]
-  (remove #{(gen/rand-nth coll)} coll))
-
-(defn safe-rand-nth
-  [coll]
-  (when (not (empty? coll))
-    (gen/rand-nth coll)))
-
 (defn wilson
   "Generate links in `grid` using Wilson's algorithm"
   [grid]
   {:pre [(s/valid? ::gr/grid? grid)]
    :post [(s/valid? ::gr/grid? %)]}
   (loop [maze grid
-         unvisited (remove-rand-nth (gr/iter-coords grid))
-         curr (safe-rand-nth unvisited)]
+         unvisited (utils/remove-rand-nth (gr/iter-visible-coords grid))
+         curr (utils/safe-rand-nth unvisited)]
     (if (empty? unvisited)
       maze
       (let [next-steps (walk-loop-erased-path maze curr unvisited)
             remaining-unvisited (remove (set next-steps) unvisited)]
-        (recur (link-path maze next-steps)
+        (recur (link-run maze next-steps)
                remaining-unvisited
-               (safe-rand-nth remaining-unvisited))))))
+               (utils/safe-rand-nth remaining-unvisited))))))
 
 (defn visited-neighbours
   [grid coords]
@@ -160,14 +148,14 @@
   {:pre [(s/valid? ::gr/grid? grid)]
    :post [(s/valid? ::gr/grid? %)]}
   (loop [maze grid
-         curr (safe-rand-nth (gr/iter-coords grid))]
+         curr (utils/safe-rand-nth (gr/iter-visible-coords grid))]
     (if (nil? curr)
       maze
-      (if-let [unvisited-neighbour (safe-rand-nth (unvisited-neighbours maze curr))]
+      (if-let [unvisited-neighbour (utils/safe-rand-nth (unvisited-neighbours maze curr))]
         (recur (gr/link-cells maze curr unvisited-neighbour)
                unvisited-neighbour)
         (if-let [new-curr (hunt-for-cell maze)]
-          (let [visited-neighbour (safe-rand-nth (visited-neighbours maze new-curr))]
+          (let [visited-neighbour (utils/safe-rand-nth (visited-neighbours maze new-curr))]
             (recur (gr/link-cells maze new-curr visited-neighbour)
                    new-curr))
           maze)))))
@@ -178,9 +166,9 @@
   {:pre [(s/valid? ::gr/grid? grid)]
    :post [(s/valid? ::gr/grid? %)]}
   (loop [maze grid
-         visited [(safe-rand-nth (gr/iter-coords grid))]]
+         visited [(safe-rand-nth (gr/iter-visible-coords grid))]]
     (if-let [curr (first visited)]
-      (if-let [unvisited-neighbour (safe-rand-nth (unvisited-neighbours maze curr))]
+      (if-let [unvisited-neighbour (utils/safe-rand-nth (unvisited-neighbours maze curr))]
         (recur (gr/link-cells maze curr unvisited-neighbour)
                (conj visited unvisited-neighbour))
         (recur maze (rest visited)))
