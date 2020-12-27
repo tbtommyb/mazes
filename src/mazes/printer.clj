@@ -136,15 +136,13 @@
         link? (partial gr/cell-has-link? cell)
         ax (+ center (unchecked-int (* inner-radius (Math/cos theta-ccw))))
         ay (+ center (unchecked-int (* inner-radius (Math/sin theta-ccw))))
-        bx (+ center (unchecked-int (* outer-radius (Math/cos theta-ccw))))
-        by (+ center (unchecked-int (* outer-radius (Math/sin theta-ccw))))
         cx (+ center (unchecked-int (* inner-radius (Math/cos theta-cw))))
         cy (+ center (unchecked-int (* inner-radius (Math/sin theta-cw))))
         dx (+ center (unchecked-int (* outer-radius (Math/cos theta-cw))))
         dy (+ center (unchecked-int (* outer-radius (Math/sin theta-cw))))]
     [:dali/page
-     [:line {:stroke (if (link? :north) :white :black)} [ax ay] [cx cy]]
-     [:line {:stroke (if (link? :east) :white :black)} [cx cy] [dx dy]]]))
+     [:path {:stroke (if (link? :north) :white :black) :fill :white} :M [ax ay] :A [inner-radius inner-radius] theta-ccw false true [cx cy]]
+     [:line {:stroke (if (link? :east) :white :black) :fill :white} [cx cy] [dx dy]]]))
 
 (defn svg-polar-row
   [center idx row]
