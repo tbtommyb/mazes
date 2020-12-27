@@ -3,7 +3,9 @@
    [clojure.string :as str]
    [clojure.spec.alpha :as s]
    [mazes.grid :as gr]
+   [mazes.cell :as cell]
    [mazes.distances :as dist]
+   [mazes.specs :as spec]
    [dali.io :as io]
    [dali.layout.stack]
    [dali.layout.align]))
@@ -11,8 +13,8 @@
 (defn ascii-upper-row
   "Generate an ASCII representation of the upper half of `row`"
   [row cell-renderer]
-  {:pre [(s/valid? ::gr/cell-list? row)]}
-  (let [render-cell #(if (gr/cell-has-link? % :east)
+  {:pre [(s/valid? ::spec/cell-list? row)]}
+  (let [render-cell #(if (cell/cell-has-link? % :east)
                        (format " %s  " (cell-renderer %))
                        (format " %s |" (cell-renderer %)))]
     (flatten (list "|" (map render-cell row) "\n"))))
@@ -20,8 +22,8 @@
 (defn ascii-lower-row
   "Generate an ASCII representation of the lower half of `row`"
   [row]
-  {:pre [(s/valid? ::gr/cell-list? row)]}
-  (let [render-cell #(if (gr/cell-has-link? % :south) "   +" "---+")]
+  {:pre [(s/valid? ::spec/cell-list? row)]}
+  (let [render-cell #(if (cell/cell-has-link? % :south) "   +" "---+")]
     (flatten (list "+" (map render-cell row) "\n"))))
 
 (defn ascii-row
@@ -40,10 +42,10 @@
   "Generate a text representation of cell, optionally using `distances`"
   [distances cell]
   {:pre [(s/valid? (s/nilable ::dist/distances?) distances)
-         (s/valid? ::gr/cell? cell)]}
+         (s/valid? ::spec/cell? cell)]}
   (if (nil? distances)
     " "
-    (let [distance (dist/get-distance distances (gr/grid-key cell))]
+    (let [distance (dist/get-distance distances (cell/grid-key cell))]
       (if (< distance Integer/MAX_VALUE)
         (Integer/toString distance 36)
         " "))))
@@ -51,7 +53,7 @@
 (defn ascii-grid
   "Print an ASCII representation of `grid` with `distances`"
   [grid & [opt]]
-  {:pre [(s/valid? ::gr/grid? grid)
+  {:pre [(s/valid? ::spec/grid? grid)
          (s/valid? (s/nilable ::dist/distances?) (:distances opt))]}
    (let [distances (:distances opt)]
      (ascii-grid-renderer grid (partial cell-renderer distances))))
@@ -67,7 +69,7 @@
   "Select the background colour for `coords` based on `distances` or default white"
   [distances coords]
   {:pre [(s/valid? (s/nilable ::dist/distances?) distances)
-         (s/valid? ::gr/coords coords)]}
+         (s/valid? ::spec/coords coords)]}
   (if (nil? distances)
     :white
     (let [distance (dist/get-distance distances coords)
@@ -82,9 +84,9 @@
   [grid-height distances cell]
   {:pre [(s/valid? pos-int? grid-height)
          (s/valid? (s/nilable ::dist/distances?) distances)
-         (s/valid? ::gr/cell? cell)]}
-  (let [[x y] (gr/grid-key cell)
-        link? (partial gr/cell-has-link? cell)
+         (s/valid? ::spec/cell? cell)]}
+  (let [[x y] (cell/grid-key cell)
+        link? (partial cell/cell-has-link? cell)
         x1 (* cell-size x)
         y1 (- grid-height (* cell-size y))
         x2 (* cell-size (+ 1 x))
@@ -99,8 +101,8 @@
   [grid-height distances cell]
   {:pre [(s/valid? pos-int? grid-height)
          (s/valid? (s/nilable ::dist/distances?) distances)
-         (s/valid? ::gr/cell? cell)]}
-  (let [[x y] (gr/grid-key cell)
+         (s/valid? ::spec/cell? cell)]}
+  (let [[x y] (cell/grid-key cell)
         x1 (* cell-size x)
         y2 (- grid-height (* cell-size (+ 1 y)))
         colour (background-colour-for distances [x y])]
@@ -110,7 +112,7 @@
 (defn to-svg
   "Generate an SVG representation of `grid` and optionally `distances`"
   [grid distances]
-  {:pre [(s/valid? ::gr/grid? grid)
+  {:pre [(s/valid? ::spec/grid? grid)
          (s/valid? (s/nilable ::dist/distances?) distances)]}
   (let [width (* (:cols grid) cell-size)
         height (* (:rows grid) cell-size)]
@@ -133,7 +135,7 @@
   [center theta inner-radius outer-radius idx cell]
   (let [theta-ccw (* theta idx)
         theta-cw (* theta (inc idx))
-        link? (partial gr/cell-has-link? cell)
+        link? (partial cell/cell-has-link? cell)
         ax (+ center (unchecked-int (* inner-radius (Math/cos theta-ccw))))
         ay (+ center (unchecked-int (* inner-radius (Math/sin theta-ccw))))
         cx (+ center (unchecked-int (* inner-radius (Math/cos theta-cw))))
