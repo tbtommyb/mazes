@@ -1,4 +1,4 @@
-(ns mazes.polar
+(ns mazes.grid.polar
   (:require
    [clojure.spec.alpha :as s]
    [mazes.algorithms :as algo]

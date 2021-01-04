@@ -12,31 +12,31 @@
 
 (defn ascii-upper-row
   "Generate an ASCII representation of the upper half of `row`"
-  [row cell-renderer]
+  [grid row cell-renderer]
   {:pre [(s/valid? ::spec/cell-list? row)]}
-  (let [render-cell #(if (cell/cell-has-link? % :east)
+  (let [render-cell #(if (gr/links-at-dir grid % :east)
                        (format " %s  " (cell-renderer %))
                        (format " %s |" (cell-renderer %)))]
     (flatten (list "|" (map render-cell row) "\n"))))
 
 (defn ascii-lower-row
   "Generate an ASCII representation of the lower half of `row`"
-  [row]
+  [grid row]
   {:pre [(s/valid? ::spec/cell-list? row)]}
-  (let [render-cell #(if (cell/cell-has-link? % :south) "   +" "---+")]
+  (let [render-cell #(if (gr/links-at-dir grid % :south) "   +" "---+")]
     (flatten (list "+" (map render-cell row) "\n"))))
 
 (defn ascii-row
   "Generate an ASCII representation of `row`"
-  [row cell-renderer]
-  (concat (ascii-upper-row row cell-renderer) (ascii-lower-row row)))
+  [grid row cell-renderer]
+  (concat (ascii-upper-row grid row cell-renderer) (ascii-lower-row grid row)))
 
 (defn ascii-grid-renderer
   "Generate an ASCII representation of `grid` using `cell-renderer"
   [grid cell-renderer]
   (let [top-wall (flatten (list "+" (repeat (:cols grid) "---+") "\n"))]
     (concat top-wall
-         (mapcat #(ascii-row % cell-renderer) (reverse (gr/iter-rows-cells grid))))))
+         (mapcat #(ascii-row grid % cell-renderer) (reverse (gr/iter-rows-cells grid))))))
 
 (defn cell-renderer
   "Generate a text representation of cell, optionally using `distances`"
@@ -81,12 +81,12 @@
 
 (defn svg-cell
   "Generate an SVG representation of a single `cell` in grid of `grid-height` coloured using `distancess`"
-  [grid-height distances cell]
+  [grid grid-height distances cell]
   {:pre [(s/valid? pos-int? grid-height)
          (s/valid? (s/nilable ::dist/distances?) distances)
          (s/valid? ::spec/cell? cell)]}
   (let [[x y] (cell/grid-key cell)
-        link? (partial cell/cell-has-link? cell)
+        link? (partial gr/links-at-dir grid cell)
         x1 (* cell-size x)
         y1 (- grid-height (* cell-size y))
         x2 (* cell-size (+ 1 x))
@@ -119,7 +119,7 @@
     [:dali/page {:width width :height height}
      [:rect {:fill :white} [0 0] [width height]]
      (map (partial svg-cell-background height distances) (gr/iter-cells grid))
-     (map (partial svg-cell height distances) (gr/iter-cells grid))]))
+     (map (partial svg-cell grid height distances) (gr/iter-cells grid))]))
 
 (defn png-out
   [grid & [opt]]
@@ -132,10 +132,10 @@
     (io/render-svg (to-svg grid distances) "output.svg")))
 
 (defn svg-polar-cell
-  [center theta inner-radius outer-radius idx cell]
+  [grid center theta inner-radius outer-radius idx cell]
   (let [theta-ccw (* theta idx)
         theta-cw (* theta (inc idx))
-        link? (partial cell/cell-has-link? cell)
+        link? (partial gr/links-at-dir grid cell)
         ax (+ center (unchecked-int (* inner-radius (Math/cos theta-ccw))))
         ay (+ center (unchecked-int (* inner-radius (Math/sin theta-ccw))))
         cx (+ center (unchecked-int (* inner-radius (Math/cos theta-cw))))
@@ -147,11 +147,11 @@
      [:line {:stroke (if (link? :east) :white :black) :fill :white} [cx cy] [dx dy]]]))
 
 (defn svg-polar-row
-  [center idx row]
+  [grid center idx row]
   (let [theta (/ (* 2 Math/PI) (count row))
         inner-radius (* idx cell-size)
         outer-radius (* (inc idx) cell-size)]
-    (concat (map-indexed (partial svg-polar-cell center theta inner-radius outer-radius) row))))
+    (concat (map-indexed (partial svg-polar-cell grid center theta inner-radius outer-radius) row))))
 
 (defn ppolar
   "Generate an SVG representation of this polar `grid`"
@@ -160,7 +160,7 @@
     [:dali/page {:width (inc image-size) :height (inc image-size)}
      [:rect {:fill :white} [0 0] [(inc image-size) (inc image-size)]]
      [:circle {:fill :white :stroke :black } [(/ image-size 2) (/ image-size 2)] (* (:rows grid) cell-size)]
-     (apply concat (map-indexed (partial svg-polar-row (/ image-size 2)) (gr/iter-rows-cells grid)))]))
+     (apply concat (map-indexed (partial svg-polar-row grid (/ image-size 2)) (gr/iter-rows-cells grid)))]))
 
 (defn polar-out
   [grid & [opt]]

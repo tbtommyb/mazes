@@ -32,7 +32,7 @@
    :post [(s/valid? ::distances? % )]}
   (reduce #(set-distance %1 %2 Integer/MAX_VALUE)
           {}
-          (gr/all-coords-for (:rows grid) (:cols grid))))
+          (gr/generate-coords (:rows grid) (:cols grid))))
 
 (defn iter-dijkstra
   "Populate `distances` from `start` in `grid`"

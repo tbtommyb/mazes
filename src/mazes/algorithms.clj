@@ -73,7 +73,7 @@
   {:pre [(s/valid? ::spec/grid? grid)]
    :post [(s/valid? ::spec/grid? %)]}
   (loop [maze grid
-         unvisited (dec (gr/count-visible-cells grid))
+         unvisited (dec (gr/size grid))
          coords (gen/rand-nth (gr/iter-visible-coords grid))]
     (if (not (pos-int? unvisited))
       maze
