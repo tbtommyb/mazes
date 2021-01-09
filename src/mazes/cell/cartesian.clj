@@ -26,10 +26,3 @@
 ;;     (get step-dir-polar [dx dy])))
 
 ;; TODO this will break if the map has keys but no vals?
-(defn cell-visited?
-  "Boolean whether `cell` has any links"
-  [cell]
-  {:pre [(s/valid? ::spec/cell? cell)]
-   :post [(s/valid? boolean? %)]}
-  (not-every? empty? (vals (:links cell))))
-

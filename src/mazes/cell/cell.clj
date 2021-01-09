@@ -35,3 +35,10 @@
   {:pre [(s/valid? ::spec/cell? cell)]
    :post [(s/valid? ::spec/coords %)]}
   (:coords cell))
+
+(defn visited?
+  "Boolean whether `cell` has any links"
+  [cell]
+  {:pre [(s/valid? ::spec/cell? cell)]
+   :post [(s/valid? boolean? %)]}
+  (not-every? empty? (vals (:links cell))))

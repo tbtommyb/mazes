@@ -7,4 +7,4 @@
    [mazes.utils :as utils]))
 
 (def my-grid (masked/new-grid "input.txt"))
-(pr/out (pr/ascii-grid (algo/binary-tree my-grid)))
+(pr/out (pr/ascii-grid (algo/recursive-backtracker (grid/new-grid 10 10))))
