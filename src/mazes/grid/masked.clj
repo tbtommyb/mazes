@@ -25,19 +25,19 @@
   [coords char-at]
   (reduce #(assoc %1 %2 (not= \X (char-at %2))) {} coords))
 
-(defn new-masked-grid
+(defn new-grid
   "Create a new grid using the mask at `path`"
   [path]
   (let [data (str/split (slurp path) #"\n")
         rows (count data)
         cols (count (first data))
-        cells (common/init-cells rows cols)
+        cells (grid/init-cells rows cols)
         char-at (fn [[x y]] (get (get data (- rows (inc y))) x))
         mask (init-mask (grid/generate-coords rows cols) char-at)]
     {:mask-type :masked :rows rows :cols cols :cells cells :mask mask}))
 
 (defmethod grid/size :masked [grid] (mask-count (:mask grid)))
 
-(defmethod grid/get-cell :unmasked [grid coord]
+(defmethod grid/get-cell :masked [grid coord]
   (when (get-bit (:mask grid) coord)
     (grid/get-cell-helper grid coord)))

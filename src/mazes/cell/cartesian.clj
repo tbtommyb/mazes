@@ -25,27 +25,6 @@
 ;;         dy (- (second to) (second from))]
 ;;     (get step-dir-polar [dx dy])))
 
-(defn grid-key
-  "Create the key to look up `cell`"
-  [cell]
-  {:pre [(s/valid? ::spec/cell? cell)]
-   :post [(s/valid? ::spec/coords %)]}
-  (:coords cell))
-
-(defn get-cell-x
-  "Return x coordinate of `cell`"
-  [cell]
-  {:pre [(s/valid? ::spec/cell? cell)]
-   :post [(s/valid? int? %)]}
-  (get-in cell [:coords 0]))
-
-(defn get-cell-y
-  "Return y coordinate of `cell`"
-  [cell]
-  {:pre [(s/valid? ::spec/cell? cell)]
-   :post [(s/valid? int? %)]}
-  (get-in cell [:coords 1]))
-
 ;; TODO this will break if the map has keys but no vals?
 (defn cell-visited?
   "Boolean whether `cell` has any links"

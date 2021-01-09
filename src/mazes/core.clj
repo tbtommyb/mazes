@@ -1,13 +1,10 @@
 (ns mazes.core
   (:require
-   ;; [mazes.algorithms :as algo]
-   ;; [mazes.distances :as dist]
-   [mazes.grid.masked :as grmk]
    [mazes.grid.grid :as grid]
-   ;; [mazes.printer :as pr]
+   [mazes.grid.masked :as masked]
+   [mazes.printer :as pr]
+   [mazes.algorithms :as algo]
    [mazes.utils :as utils]))
 
-
-(def masked-grid (grmk/new-masked-grid "input.txt"))
-
-(grid/iter-grid masked-grid)
+(def my-grid (masked/new-grid "input.txt"))
+(pr/out (pr/ascii-grid (algo/binary-tree my-grid)))
