@@ -11,7 +11,7 @@
 
 ;; (def my-grid (masked/new-grid "input.txt"))
 ;; (def my-grid (grid/new-grid 6 12))
-(def my-grid (polar/new 4))
+(def my-grid (polar/new 10))
 ;; (def maze (algo/recursive-backtracker my-grid))
 ;; (def distances (dist/dijkstra maze [3 3]))
 (pr/polar-out my-grid)
