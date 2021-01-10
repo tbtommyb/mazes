@@ -78,6 +78,7 @@
     (if (not (pos-int? unvisited))
       maze
       (let [neighbour (utils/safe-rand-nth (gr/get-neighbouring-cells maze cell))]
+        (prn neighbour)
         (if (empty? (:links neighbour))
           (recur
            (gr/link-cells maze cell neighbour)

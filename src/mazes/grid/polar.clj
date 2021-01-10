@@ -44,10 +44,10 @@
   {:pre [(s/valid? ::spec/cell? from)
          (s/valid? ::spec/cell? to)]}
   (cond
-    (some #{to} (grid/get-neighbouring-cells grid from '(:cw))) :cw
-    (some #{to} (grid/get-neighbouring-cells grid from '(:ccw))) :ccw
-    (some #{to} (grid/get-neighbouring-cells grid from '(:inner))) :inner
-    (some #{to} (grid/get-neighbouring-cells grid from '(:outer))) :outer))
+    (some #{(cell/coords to)} (map cell/coords (grid/get-neighbouring-cells grid from '(:cw)))) :cw
+    (some #{(cell/coords to)} (map cell/coords (grid/get-neighbouring-cells grid from '(:ccw)))) :ccw
+    (some #{(cell/coords to)} (map cell/coords (grid/get-neighbouring-cells grid from '(:inner)))) :inner
+    (some #{(cell/coords to)} (map cell/coords (grid/get-neighbouring-cells grid from '(:outer)))) :outer))
 
 (declare get-neighbours-helper)
 ;; TODO this is inefficient but works
