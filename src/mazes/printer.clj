@@ -94,6 +94,8 @@
         y2 (- grid-height (* cell-size (+ 1 y)))
         colour (background-colour-for distances cell)]
     [:dali/page
+     [:line {:stroke (if (link? :north) colour :black)} [x1 y2] [x2 y2]]
+     [:line {:stroke (if (link? :east) colour :black)} [x2 y1] [x2 y2]]
      [:line {:stroke (if (link? :south) colour :black)} [x1 y1] [x2 y1]]
      [:line {:stroke (if (link? :west) colour :black)} [x1 y1] [x1 y2]]]))
 
@@ -120,7 +122,7 @@
     [:dali/page {:width width :height height}
      [:rect {:fill :white} [0 0] [width height]]
      (map (partial svg-cell-background height distances) (grid/iter-grid grid))
-     (map (partial svg-cell grid height distances) (grid/iter-grid grid {:ignore-mask true}))]))
+     (map (partial svg-cell grid height distances) (grid/iter-grid grid))]))
 
 (defn png-out
   [grid & [opt]]

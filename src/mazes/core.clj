@@ -7,10 +7,10 @@
    [mazes.algorithms :as algo]
    [mazes.utils :as utils]))
 
-;; (def my-grid (masked/new-grid "test/mazes/test-mask.txt"))
-(def my-grid (grid/new-grid 6 10))
-;; (def maze (algo/aldous-broder my-grid))
-;; (def distances (dist/dijkstra maze [0 0]))
-(pr/polar-out my-grid)
+;; (def my-grid (masked/new-grid "input.txt"))
+;; (def my-grid (grid/new-grid 6 8))
+;; (def maze (algo/recursive-backtracker my-grid))
+;; (def distances (dist/dijkstra maze [3 3]))
+;; (pr/polar-out maze)
 ;; (pr/out (pr/ascii-grid maze {:distances distances}))
-;; (pr/png-out maze {:distances distances})
+;; (pr/png-out maze {:distances nil})
