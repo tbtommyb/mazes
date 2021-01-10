@@ -120,18 +120,15 @@
 
 (defn visited-neighbours
   [grid cell]
-  (->> (gr/get-neighbouring-cells grid cell)
-       (filter cell/visited?)))
+  (filter cell/visited? (gr/get-neighbouring-cells grid cell)))
 
 (defn unvisited-neighbours
   [grid cell]
-  (->> (gr/get-neighbouring-cells grid cell)
-       (remove cell/visited?)))
+  (remove cell/visited? (gr/get-neighbouring-cells grid cell)))
 
 (defn cell-has-visited-neighbours?
   [grid cell]
-  (->> (gr/get-neighbouring-cells grid cell)
-       (some cell/visited?)))
+  (some cell/visited? (gr/get-neighbouring-cells grid cell)))
 
 (defn hunt-for-cell
   [grid]

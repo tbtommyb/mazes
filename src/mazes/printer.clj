@@ -136,18 +136,19 @@
 
 (defn svg-polar-cell
   [grid center theta inner-radius outer-radius idx cell]
-  (let [theta-ccw (* theta idx)
-        theta-cw (* theta (inc idx))
-        link? (fn [dir] (not-empty (grid/get-linked-cells grid cell (list dir))))
-        ax (+ center (unchecked-int (* inner-radius (Math/cos theta-ccw))))
-        ay (+ center (unchecked-int (* inner-radius (Math/sin theta-ccw))))
-        cx (+ center (unchecked-int (* inner-radius (Math/cos theta-cw))))
-        cy (+ center (unchecked-int (* inner-radius (Math/sin theta-cw))))
-        dx (+ center (unchecked-int (* outer-radius (Math/cos theta-cw))))
-        dy (+ center (unchecked-int (* outer-radius (Math/sin theta-cw))))]
-    [:dali/page
-     [:path {:stroke (if (link? :north) :white :black) :fill :white} :M [ax ay] :A [inner-radius inner-radius] theta-ccw false true [cx cy]]
-     [:line {:stroke (if (link? :east) :white :black) :fill :white} [cx cy] [dx dy]]]))
+  (when-not (= (cell/coords cell) [0 0])
+    (let [theta-ccw (* theta idx)
+          theta-cw (* theta (inc idx))
+          link? (fn [dir] (not-empty (grid/get-linked-cells grid cell (list dir))))
+          ax (+ center (unchecked-int (* inner-radius (Math/cos theta-ccw))))
+          ay (+ center (unchecked-int (* inner-radius (Math/sin theta-ccw))))
+          cx (+ center (unchecked-int (* inner-radius (Math/cos theta-cw))))
+          cy (+ center (unchecked-int (* inner-radius (Math/sin theta-cw))))
+          dx (+ center (unchecked-int (* outer-radius (Math/cos theta-cw))))
+          dy (+ center (unchecked-int (* outer-radius (Math/sin theta-cw))))]
+      [:dali/page
+       [:path {:stroke (if (link? :inner) :white :black) :fill :white} :M [ax ay] :A [inner-radius inner-radius] theta-ccw false true [cx cy]]
+       [:line {:stroke (if (link? :cw) :white :black) :fill :white} [cx cy] [dx dy]]])))
 
 (defn svg-polar-row
   [grid center idx row]

@@ -17,10 +17,12 @@
 ;; TODO simply check if grid has a :mask key
 (defmulti size :mask-type)
 (defmulti get-cell :mask-type)
+(defmulti get-neighbouring-cells (fn [grid & args] (:type grid)))
+(defmulti direction-between-cells (fn [grid & args] (:type grid)))
 
 ;; move to cell?
-(defn direction-between-cells
-  [from to]
+(defmethod direction-between-cells :cartesian
+  [grid from to]
   {:pre [(s/valid? ::spec/cell? from)
          (s/valid? ::spec/cell? to)]
    :post [(s/valid? (s/nilable ::spec/cartesian-direction?) %)]}
@@ -39,8 +41,7 @@
         coord (vector (+ dx (cell/get-x src)) (+ dy (cell/get-y src)))]
     (get-cell grid coord)))
 
-(defn get-neighbouring-cells
-  "In `grid` get neighbours of `cell` in `directions`"
+(defmethod get-neighbouring-cells :cartesian
   ([grid cell] (get-neighbouring-cells grid cell '(:north :south :east :west)))
   ([grid cell dirs]
    {:pre [(s/valid? ::spec/grid? grid)
@@ -98,8 +99,8 @@
   ([grid cell] (get-linked-cells grid cell cartesian-dirs))
   ([grid cell dirs]
    {:pre [(s/valid? ::spec/grid? grid)
-          (s/valid? ::spec/cell? cell)
-          (s/valid? (s/coll-of ::spec/cartesian-direction?) dirs)]
+          (s/valid? ::spec/cell? cell)]
+          ;; (s/valid? (s/coll-of ::spec/cartesian-direction?) dirs)]
     :post [(s/valid? ::spec/cell-list? %)]}
    (mapcat (fn [dir] (map (partial get-cell grid) (cell/links-at cell dir))) dirs)))
 
@@ -116,8 +117,8 @@
           (s/valid? ::spec/cell? dest)
           (s/valid? boolean? bidirectional)]
     :post [(s/valid? ::spec/grid? grid)]}
-   (let [direction (direction-between-cells src dest)
-         reverse (direction-between-cells dest src)]
+   (let [direction (direction-between-cells grid src dest)
+         reverse (direction-between-cells grid dest src)]
      (cond-> grid
        (some? direction) (add-link src dest direction)
        (and bidirectional (some? reverse)) (add-link dest src reverse)))))
@@ -128,7 +129,11 @@
   {:pre [(s/valid? ::spec/rows rows)
          (s/valid? ::spec/cols cols)]
    :post [(s/valid? ::spec/grid? %)]}
-  {:mask-type :unmasked :rows rows :cols cols :cells (init-cells rows cols)})
+  {:mask-type :unmasked
+   :type :cartesian
+   :rows rows
+   :cols cols
+   :cells (init-cells rows cols)})
 
-(defmethod size :unmasked [grid] (* (:rows grid) (:cols grid)))
+(defmethod size :unmasked [grid] (count (:cells grid)))
 (defmethod get-cell :unmasked [grid coord] (get-cell-helper grid coord))

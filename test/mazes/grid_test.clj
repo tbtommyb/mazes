@@ -7,6 +7,7 @@
   (testing "Creating a grid"
     (is (= (new-grid 2 2)
            {:mask-type :unmasked
+            :type :cartesian
             :rows 2
             :cols 2
             :cells {[0 0] {}
@@ -15,6 +16,7 @@
                     [1 1] {}}}))
     (is (= (new-grid 1 2)
            {:mask-type :unmasked
+            :type :cartesian
             :rows 1
             :cols 2
             :cells {[0 0] {}
@@ -27,6 +29,7 @@
 (deftest get-links-test
   (testing "Testing getting a cell out of a grid"
     (let [grid {:mask-type :unmasked
+                :type :cartesian
                 :rows 2
                 :cols 2
                 :cells {[0 0] {:north '(:a)}
@@ -61,19 +64,22 @@
                {:coords [1 1] :links {}}
                {:coords [2 1] :links {}}]])))))
 
+;; TODO gross
 (deftest direction-between-cells-test
   (testing "Find direction between two cells if neighbouring"
-    (is (nil? (direction-between-cells (cell/make [0 0]) (cell/make [5 5]))))
-    (is (= :north (direction-between-cells (cell/make [0 0]) (cell/make [0 1]))))
-    (is (= :south (direction-between-cells (cell/make [0 1]) (cell/make [0 0]))))
-    (is (= :east (direction-between-cells (cell/make [0 0]) (cell/make [1 0]))))
-    (is (= :west (direction-between-cells (cell/make [1 0]) (cell/make [0 0]))))))
+    (let [grid (new-grid 2 2)]
+      (is (nil? (direction-between-cells grid (cell/make [0 0]) (cell/make [5 5]))))
+      (is (= :north (direction-between-cells grid (cell/make [0 0]) (cell/make [0 1]))))
+      (is (= :south (direction-between-cells grid (cell/make [0 1]) (cell/make [0 0]))))
+      (is (= :east (direction-between-cells grid (cell/make [0 0]) (cell/make [1 0]))))
+      (is (= :west (direction-between-cells grid (cell/make [1 0]) (cell/make [0 0])))))))
 
 (deftest link-coords-test
   (testing "Cells can be linked to each other"
     (let [grid (new-grid 2 2)]
       (is (= (link-cells grid (cell/make [0 0]) (cell/make [0 1]))
              {:mask-type :unmasked
+              :type :cartesian
               :rows 2
               :cols 2
               :cells {[0 0] {:north '([0 1])}
@@ -82,6 +88,7 @@
                       [1 1] {}}}))
       (is (= (link-cells grid (cell/make [0 0]) (cell/make [1 1]))
              {:mask-type :unmasked
+              :type :cartesian
               :rows 2
               :cols 2
               :cells {[0 0] {}
@@ -90,6 +97,7 @@
                       [1 1] {}}}))
       (is (= (link-cells grid (cell/make [0 0]) (cell/make [0 0]))
              {:mask-type :unmasked
+              :type :cartesian
               :rows 2
               :cols 2
               :cells {[0 0] {}
