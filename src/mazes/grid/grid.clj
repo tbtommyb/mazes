@@ -68,18 +68,17 @@
 
 (defn iter-grid
   "Iterate through `grid` by column, returning each accessible cell"
-  [grid]
+  [grid & [opt]]
   {:pre [(s/valid? ::spec/grid? grid)]
    :post [(s/valid? ::spec/cell-list? %)]}
-  (keep (partial get-cell grid)
-        (generate-coords (:rows grid) (:cols grid))))
+  (let [getter (if (:ignore-mask opt) get-cell-helper get-cell)]
+    (keep (partial getter grid)
+          (sort-by (juxt first last) (keys (:cells grid))))))
 
 (defn iter-row
   "Return vector of cells in `row` in `grid`"
   [grid y & [opt]]
-  (let [getter (if (:ignore-mask opt) get-cell-helper get-cell)]
-    (keep (partial getter grid)
-          (for [x (range (:cols grid))] [x y]))))
+  (filter #(= y (cell/get-y %)) (iter-grid grid opt)))
 
 (defn iter-rows
   "Return a vector of cell vectors for each row in `grid`"

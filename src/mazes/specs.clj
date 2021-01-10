@@ -15,7 +15,7 @@
 (s/def ::cells map?)
 (s/def ::links map?)
 ;; TODO tighten up definition of grid to include links
-(s/def ::grid? (s/keys :req-un [::rows ::cols ::cells]))
+(s/def ::grid? (s/keys :req-un [::rows ::cells]))
 (s/def ::cell? (s/keys :req-un [::coords ::links]))
 (s/def ::cell-list? (s/coll-of ::cell?))
 (s/def ::bounded-coord? (fn [[maze coord]]
