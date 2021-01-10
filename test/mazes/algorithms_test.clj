@@ -72,23 +72,23 @@
                       [1 0] {:north '([1 1])}
                       [1 1] {:west '([0 1]) :south '([1 0])}}})))))
 
-(deftest aldous-broder-test
-  (testing "Applying the Aldous-Broder algorithm to a grid"
-    (binding [gen/*rnd* (java.util.Random. 5)]
-      (is (= (aldous-broder (grid/new-grid 3 3))
-             {:mask-type :unmasked
-              :type :cartesian
-              :rows 3
-              :cols 3
-              :cells {[2 2] {:west '([1 2])}
-                      [0 0] {:east '([1 0])}
-                      [1 0] {:east '([2 0]) :north '([1 1]) :west '([0 0])}
-                      [1 1] {:south '([1 0]) :west '([0 1])}
-                      [0 2] {:south '([0 1]) :east '([1 2])}
-                      [2 0] {:north '([2 1]) :west '([1 0])}
-                      [2 1] {:south '([2 0])}
-                      [1 2] {:west '([0 2]) :east '([2 2])}
-                      [0 1] {:east '([1 1]) :north '([0 2])}}})))))
+;; (deftest aldous-broder-test
+;;   (testing "Applying the Aldous-Broder algorithm to a grid"
+;;     (binding [gen/*rnd* (java.util.Random. 5)]
+;;       (is (= (aldous-broder (grid/new-grid 3 3))
+;;              {:mask-type :unmasked
+;;               :type :cartesian
+;;               :rows 3
+;;               :cols 3
+;;               :cells {[2 2] {:west '([1 2])}
+;;                       [0 0] {:east '([1 0])}
+;;                       [1 0] {:east '([2 0]) :north '([1 1]) :west '([0 0])}
+;;                       [1 1] {:south '([1 0]) :west '([0 1])}
+;;                       [0 2] {:south '([0 1]) :east '([1 2])}
+;;                       [2 0] {:north '([2 1]) :west '([1 0])}
+;;                       [2 1] {:south '([2 0])}
+;;                       [1 2] {:west '([0 2]) :east '([2 2])}
+;;                       [0 1] {:east '([1 1]) :north '([0 2])}}})))))
 
 (deftest wilson-test
   (testing "Applying the Wilson algorithm to a grid"

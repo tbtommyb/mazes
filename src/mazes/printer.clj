@@ -167,5 +167,5 @@
      (apply concat (map-indexed (partial svg-polar-row grid (/ image-size 2)) (grid/iter-rows grid)))]))
 
 (defn polar-out
-  [grid & [opt]]
-  (io/render-png (svg-polar grid) "polar.png"))
+  [grid filename & [opt]]
+  (io/render-png (svg-polar grid) filename))

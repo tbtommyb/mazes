@@ -43,32 +43,50 @@
   [grid from to]
   {:pre [(s/valid? ::spec/cell? from)
          (s/valid? ::spec/cell? to)]}
-  (let [dx (- (cell/get-x to) (cell/get-x from))
-        dy (- (cell/get-y to) (cell/get-y from))]
-    (get step-dir-polar [dx dy])))
+  (cond
+    (some #{to} (grid/get-neighbouring-cells grid from '(:cw))) :cw
+    (some #{to} (grid/get-neighbouring-cells grid from '(:ccw))) :ccw
+    (some #{to} (grid/get-neighbouring-cells grid from '(:inner))) :inner
+    (some #{to} (grid/get-neighbouring-cells grid from '(:outer))) :outer))
 
-(defn get-neighbour-at
-  "Find neighbour from `src` in `direction` in `grid`"
+(declare get-neighbours-helper)
+;; TODO this is inefficient but works
+(defn find-children-of
+  [grid parent]
+  (filter (fn [cell] (some #{parent} (get-neighbours-helper grid cell '(:inner))))
+   (grid/iter-grid grid)))
+
+(defn get-neighbours-at
+  "Find neighbours from `src` in `direction` in `grid`"
   [grid src direction]
   {:pre [(s/valid? ::spec/grid? grid)
          (s/valid? ::spec/cell? src)]
-   :post [(s/valid? (s/nilable ::spec/cell?) %)]}
-  (let [[dx dy] (get dir-step-polar direction)
-        coord (vector (+ dx (cell/get-x src)) (+ dy (cell/get-y src)))]
-    (grid/get-cell grid coord)))
+   :post [(s/valid? (s/coll-of (s/nilable ::spec/cell?)) %)]}
+  (if (= (cell/coords src) [0 0])
+    (if (= direction :outer)
+      (grid/iter-row grid 1)
+      '())
+    (let [[x y] (cell/coords src)
+          ratio (/ (count-row (:cells grid) (cell/get-y src))
+                   (count-row (:cells grid) (dec (cell/get-y src))))]
+      (cond
+        (= direction :cw) (list (grid/get-cell grid [(inc x) y]))
+        (= direction :ccw) (list (grid/get-cell grid [(dec x) y]))
+        (= direction :inner) (list (grid/get-cell grid [(int (/ x ratio)) (dec y)]))
+        (= direction :outer) (find-children-of grid src)))))
 
 (defn get-neighbours-helper
   [grid cell dirs]
    {:pre [(s/valid? ::spec/grid? grid)
           (s/valid? ::spec/cell? cell)]
     :post [(s/valid? ::spec/cell-list? %)]}
-   (keep #(get-neighbour-at grid cell %) dirs))
+   (mapcat #(remove nil? (get-neighbours-at grid cell %)) dirs))
 
 (defmethod grid/get-neighbouring-cells :polar
   ([grid cell] (get-neighbours-helper grid cell '(:cw :ccw :inner :outer)))
   ([grid cell dirs] (get-neighbours-helper grid cell dirs)))
 
-(defn new
+(defn new-grid
   "Create a polar grid with `rows` rows"
   [rows]
   {:mask-type :unmasked

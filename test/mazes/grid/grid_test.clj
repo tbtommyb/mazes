@@ -1,4 +1,4 @@
-(ns mazes.grid-test
+(ns mazes.grid.grid-test
   (:require [clojure.test :refer :all]
             [mazes.cell.cell :as cell]
             [mazes.grid.grid :refer :all]))
