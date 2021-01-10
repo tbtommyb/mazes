@@ -101,7 +101,7 @@
    {:pre [(s/valid? ::spec/grid? grid)
           (s/valid? ::spec/cell? cell)
           (s/valid? (s/coll-of ::spec/cartesian-direction?) dirs)]
-    :post [(s/valid? ::spec/coord-list %)]}
+    :post [(s/valid? ::spec/cell-list? %)]}
    (mapcat (fn [dir] (map (partial get-cell grid) (cell/links-at cell dir))) dirs)))
 
 (defn add-link

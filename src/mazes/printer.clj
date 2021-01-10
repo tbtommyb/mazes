@@ -4,7 +4,7 @@
    [clojure.spec.alpha :as s]
    [mazes.grid.grid :as grid]
    [mazes.cell.cell :as cell]
-   ;; [mazes.distances :as dist]
+   [mazes.distances :as dist]
    [mazes.specs :as spec]
    [dali.io :as io]
    [dali.layout.stack]
@@ -42,21 +42,20 @@
 (defn cell-renderer
   "Generate a text representation of cell, optionally using `distances`"
   [distances cell]
-  ;; {:pre [(s/valid? (s/nilable ::dist/distances?) distances)
-  ;;        (s/valid? ::spec/cell? cell)]}
+  {:pre [(s/valid? (s/nilable ::spec/distances?) distances)
+         (s/valid? ::spec/cell? cell)]}
   (if (nil? distances)
     " "
-    " "))
-    ;; (let [distance (dist/get-distance distances (cell/grid-key cell))]
-    ;;   (if (< distance Integer/MAX_VALUE)
-    ;;     (Integer/toString distance 36)
-    ;;     " "))))
+    (let [distance (dist/get-distance distances cell)]
+      (if (< distance Integer/MAX_VALUE)
+        (Integer/toString distance 36)
+        " "))))
 
 (defn ascii-grid
   "Print an ASCII representation of `grid` with `distances`"
   [grid & [opt]]
-  ;; {:pre [(s/valid? ::spec/grid? grid)
-  ;;        (s/valid? (s/nilable ::dist/distances?) (:distances opt))]}
+  {:pre [(s/valid? ::spec/grid? grid)
+         (s/valid? (s/nilable ::spec/distances?) (:distances opt))]}
    (let [distances (:distances opt)]
      (ascii-grid-renderer grid (partial cell-renderer distances))))
 

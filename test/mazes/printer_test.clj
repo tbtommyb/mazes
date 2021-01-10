@@ -3,7 +3,7 @@
             [clojure.data.generators :as gen]
             [mazes.grid.grid :as grid]
             [mazes.grid.masked :as masked]
-            ;; [mazes.distances :as dist]
+            [mazes.distances :as dist]
             [mazes.algorithms :as algo]
             [mazes.printer :refer :all]))
 
@@ -30,36 +30,50 @@
         (is (= (ascii-grid maze)
                '("+" "---+" "---+" "---+" "---+" "---+" "\n"
                  "|" "   |" "    " "    " "   |" "   |" "\n"
-                 "+" "---+" "   +" "---+" "---+" "---+" "\n"
-                 "|" "    " "   |" "   |" "    " "   |" "\n"
                  "+" "---+" "   +" "---+" "   +" "---+" "\n"
-                 "|" "   |" "   |" "    " "   |" "   |" "\n"
+                 "|" "    " "   |" "   |" "   |" "   |" "\n"
+                 "+" "---+" "   +" "---+" "   +" "---+" "\n"
+                 "|" "    " "   |" "    " "   |" "   |" "\n"
                  "+" "---+" "---+" "---+" "---+" "---+" "\n")))))))
-;; (deftest ascii-distances-test
-;;   (testing "A simple grid with distances renders correctly"
-;;     (binding [gen/*rnd* (java.util.Random. 3)]
-;;       (let [maze (algo/sidewinder (gr/new-simple-grid 3 3))
-;;             distances (dist/dijkstra maze [0 0])]
-;;         (is (= (ascii-grid maze {:distances distances})
-;;                '("+" "---+" "---+" "---+" "\n"
-;;                  "|" " 4  " " 3  " " 4 |" "\n"
-;;                  "+" "---+" "   +" "   +" "\n"
-;;                  "|" " 1  " " 2 |" " 5 |" "\n"
-;;                  "+" "   +" "   +" "   +" "\n"
-;;                  "|" " 0 |" " 3 |" " 6 |" "\n"
-;;                  "+" "---+" "---+" "---+" "\n")))))))
 
-;; (deftest ascii-path-test
-;;   (testing "A simple path renders correctly"
-;;     (binding [gen/*rnd* (java.util.Random. 3)]
-;;       (let [maze (algo/sidewinder (gr/new-simple-grid 4 4))]
-;;         (is (= (ascii-grid maze {:distances (dist/longest-path maze)})
-;;                '("+" "---+" "---+" "---+" "---+" "\n"
-;;                  "|" "    " " 4  " " 5  " " 6 |" "\n"
-;;                  "+" "---+" "   +" "   +" "   +" "\n"
-;;                  "|" " 2  " " 3 |" "   |" " 7 |" "\n"
-;;                  "+" "   +" "   +" "---+" "   +" "\n"
-;;                  "|" " 1 |" "   |" " 9  " " 8 |" "\n"
-;;                  "+" "   +" "   +" "   +" "   +" "\n"
-;;                  "|" " 0 |" "   |" " a |" "   |" "\n"
-;;                  "+" "---+" "---+" "---+" "---+" "\n")))))))
+(deftest ascii-distances-test
+  (testing "A simple grid with distances renders correctly"
+    (binding [gen/*rnd* (java.util.Random. 3)]
+      (let [maze (algo/sidewinder (grid/new-grid 3 3))
+            distances (dist/dijkstra maze [0 0])]
+        (is (= (ascii-grid maze {:distances distances})
+               '("+" "---+" "---+" "---+" "\n"
+                 "|" " 2  " " 3  " " 4 |" "\n"
+                 "+" "   +" "---+" "   +" "\n"
+                 "|" " 1  " " 2 |" " 5 |" "\n"
+                 "+" "   +" "   +" "   +" "\n"
+                 "|" " 0 |" " 3 |" " 6 |" "\n"
+                 "+" "---+" "---+" "---+" "\n")))))))
+
+(deftest ascii-path-test
+  (testing "A simple path renders correctly"
+    (binding [gen/*rnd* (java.util.Random. 3)]
+      (let [maze (algo/sidewinder (grid/new-grid 4 4))]
+        (is (= (ascii-grid maze {:distances (dist/longest-path maze)})
+               '("+" "---+" "---+" "---+" "---+" "\n"
+                 "|" " 4  " " 5  " " 6  " "   |" "\n"
+                 "+" "   +" "---+" "   +" "   +" "\n"
+                 "|" " 3  " " 2 |" " 7 |" "   |" "\n"
+                 "+" "   +" "   +" "   +" "---+" "\n"
+                 "|" "   |" " 1 |" " 8  " " 9 |" "\n"
+                 "+" "   +" "   +" "   +" "   +" "\n"
+                 "|" "   |" " 0 |" "   |" " a |" "\n"
+                 "+" "---+" "---+" "---+" "---+" "\n")))))))
+
+(deftest ascii-masked-distances-test
+  (testing "Distances in a masked grid render correctly"
+    (binding [gen/*rnd* (java.util.Random. 3)]
+      (let [maze (algo/aldous-broder (masked/new-grid "test/mazes/test-mask.txt"))]
+        (is (= (ascii-grid maze {:distances (dist/dijkstra maze [0 0])})
+               '("+" "---+" "---+" "---+" "---+" "---+" "\n"
+                 "|" "   |" " 3 |" " 6  " " 5 |" "   |" "\n"
+                 "+" "---+" "   +" "---+" "   +" "---+" "\n"
+                 "|" " 3  " " 2 |" "   |" " 4  " " 5 |" "\n"
+                 "+" "---+" "   +" "---+" "   +" "---+" "\n"
+                 "|" " 0  " " 1  " " 2  " " 3 |" "   |" "\n"
+                 "+" "---+" "---+" "---+" "---+" "---+" "\n")))))))

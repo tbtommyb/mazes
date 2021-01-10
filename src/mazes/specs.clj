@@ -18,8 +18,11 @@
 (s/def ::grid? (s/keys :req-un [::rows ::cols ::cells]))
 (s/def ::cell? (s/keys :req-un [::coords ::links]))
 (s/def ::cell-list? (s/coll-of ::cell?))
-(s/def ::bounded-coords? (fn [[maze coords]]
-                           (and (>= (first coords) 0)
-                                (>= (second coords) 0)
-                                (< (first coords) (:cols maze))
-                                (< (second coords) (:rows maze)))))
+(s/def ::bounded-coord? (fn [[maze coord]]
+                           (and (>= (first coord) 0)
+                                (>= (second coord) 0)
+                                (< (first coord) (:cols maze))
+                                (< (second coord) (:rows maze)))))
+(s/def ::distances? map?)
+(s/def ::distance? (s/nilable int?))
+
