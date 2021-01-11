@@ -78,7 +78,6 @@
     (if (not (pos-int? unvisited))
       maze
       (let [neighbour (utils/safe-rand-nth (gr/get-neighbouring-cells maze cell))]
-        (prn neighbour)
         (if (empty? (:links neighbour))
           (recur
            (gr/link-cells maze cell neighbour)
@@ -121,14 +120,23 @@
 
 (defn visited-neighbours
   [grid cell]
+  {:pre [(s/valid? ::spec/grid? grid)
+         (s/valid? ::spec/cell? cell)]
+   :post [(s/valid? ::spec/cell-list? %)]}
   (filter cell/visited? (gr/get-neighbouring-cells grid cell)))
 
 (defn unvisited-neighbours
   [grid cell]
+  {:pre [(s/valid? ::spec/grid? grid)
+         (s/valid? ::spec/cell? cell)]
+   :post [(s/valid? ::spec/cell-list? %)]}
   (remove cell/visited? (gr/get-neighbouring-cells grid cell)))
 
 (defn cell-has-visited-neighbours?
   [grid cell]
+  {:pre [(s/valid? ::spec/grid? grid)
+         (s/valid? ::spec/cell? cell)]
+   :post [(s/valid? boolean? %)]}
   (some cell/visited? (gr/get-neighbouring-cells grid cell)))
 
 (defn hunt-for-cell

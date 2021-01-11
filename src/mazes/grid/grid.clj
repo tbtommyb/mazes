@@ -119,9 +119,6 @@
     :post [(s/valid? ::spec/grid? grid)]}
    (let [direction (direction-between-cells grid src dest)
          reverse (direction-between-cells grid dest src)]
-     (when (or (nil? direction) (nil? reverse))
-       (prn grid)
-       (prn src direction dest reverse))
      (cond-> grid
        (some? direction) (add-link src dest direction)
        (and bidirectional (some? reverse)) (add-link dest src reverse)))))

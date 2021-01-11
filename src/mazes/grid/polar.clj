@@ -56,6 +56,18 @@
   (filter (fn [cell] (some #{parent} (get-neighbours-helper grid cell '(:inner))))
    (grid/iter-grid grid)))
 
+(defn get-outer
+  [grid src]
+  (if (= (dec (cell/get-y src)) (:rows grid))
+    '()
+    (let [[x y] (cell/coords src)
+          outer-ratio (/ (count-row (:cells grid) (inc y))
+                         (count-row (:cells grid) y))]
+      (if (= 1 outer-ratio)
+        (list (grid/get-cell grid [x (inc y)]))
+        (list (grid/get-cell grid [(* x 2) (inc y)])
+              (grid/get-cell grid [(inc (* x 2)) (inc y)]))))))
+
 (defn get-neighbours-at
   "Find neighbours from `src` in `direction` in `grid`"
   [grid src direction]
@@ -73,7 +85,7 @@
         (= direction :cw) (list (grid/get-cell grid [(inc x) y]))
         (= direction :ccw) (list (grid/get-cell grid [(dec x) y]))
         (= direction :inner) (list (grid/get-cell grid [(int (/ x ratio)) (dec y)]))
-        (= direction :outer) (find-children-of grid src)))))
+        (= direction :outer) (get-outer grid src)))))
 
 (defn get-neighbours-helper
   [grid cell dirs]

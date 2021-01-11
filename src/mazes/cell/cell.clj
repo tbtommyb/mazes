@@ -41,4 +41,4 @@
   [cell]
   {:pre [(s/valid? ::spec/cell? cell)]
    :post [(s/valid? boolean? %)]}
-  (not-every? empty? (vals (:links cell))))
+  ((complement empty?) (:links cell)))
