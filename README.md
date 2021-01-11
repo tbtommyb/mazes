@@ -73,7 +73,7 @@ mazes.core> (pr/out (pr/ascii-grid maze {:distances (dist/longest-path maze)}))
 
 mazes.core> (def maze (algo/sidewinder (gr/new-grid 12 12)))
 mazes.core> (def dist (dist/dijkstra maze [0 0]))
-mazes.core> (pr/png-out maze {:distances dist})
+mazes.core> (pr/png-out maze "images/sidewinder.png" {:distances dist})
 ```
 
 ![Sidewinder coloured](https://github.com/tbtommyb/mazes/blob/master/images/sidewinder.png?raw=true)
