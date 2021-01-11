@@ -5,7 +5,7 @@ A Clojure library designed to create mazes, based on [Mazes for Programmers](htt
 ## Usage
 
 ```
-mazes.core> (pr/out (pr/ascii-grid (algo/binary-tree (gr/init 10 10))))
+mazes.core> (pr/out (pr/ascii-grid (algo/binary-tree (gr/new-grid 10 10))))
 +---+---+---+---+---+---+---+---+---+---+
 |                                       |
 +   +---+---+   +   +   +   +---+   +   +
@@ -28,7 +28,7 @@ mazes.core> (pr/out (pr/ascii-grid (algo/binary-tree (gr/init 10 10))))
 |   |   |                       |   |   |
 +---+---+---+---+---+---+---+---+---+---+
 
-mazes.core> (pr/out (pr/ascii-grid (algo/sidewinder (gr/init 10 10))))
+mazes.core> (pr/out (pr/ascii-grid (algo/sidewinder (gr/new-grid 10 10))))
 +---+---+---+---+---+---+---+---+---+---+
 |                                       |
 +---+   +---+   +   +---+   +---+   +---+
@@ -51,7 +51,7 @@ mazes.core> (pr/out (pr/ascii-grid (algo/sidewinder (gr/init 10 10))))
 |       |   |   |           |   |       |
 +---+---+---+---+---+---+---+---+---+---+
 
-mazes.core> (def maze (algo/sidewinder (gr/init 8 8)))
+mazes.core> (def maze (algo/sidewinder (gr/new-grid 8 8)))
 mazes.core> (pr/out (pr/ascii-grid maze {:distances (dist/longest-path maze)}))
 +---+---+---+---+---+---+---+---+
 | f   g   h   i   j   k   l     |
@@ -71,7 +71,7 @@ mazes.core> (pr/out (pr/ascii-grid maze {:distances (dist/longest-path maze)}))
 |   |   | 2   1   0 | t   u |   |
 +---+---+---+---+---+---+---+---+
 
-mazes.core> (def maze (algo/sidewinder (gr/init 12 12)))
+mazes.core> (def maze (algo/sidewinder (gr/new-grid 12 12)))
 mazes.core> (def dist (dist/dijkstra maze [0 0]))
 mazes.core> (pr/png-out maze {:distances dist})
 ```
