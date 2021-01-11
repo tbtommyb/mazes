@@ -45,11 +45,9 @@
   [grid from to]
   {:pre [(s/valid? ::spec/cell? from)
          (s/valid? ::spec/cell? to)]}
-  (cond
-    (some #{(cell/coords to)} (map cell/coords (grid/get-neighbouring-cells grid from '(:cw)))) :cw
-    (some #{(cell/coords to)} (map cell/coords (grid/get-neighbouring-cells grid from '(:ccw)))) :ccw
-    (some #{(cell/coords to)} (map cell/coords (grid/get-neighbouring-cells grid from '(:inner)))) :inner
-    (some #{(cell/coords to)} (map cell/coords (grid/get-neighbouring-cells grid from '(:outer)))) :outer))
+  (let [is-neighbour #(some #{(cell/coords to)}
+                            (map cell/coords (grid/get-neighbouring-cells grid from (list %))))]
+    (first (filter is-neighbour '(:cw :ccw :inner :outer) ))))
 
 (defn get-outer-neighbours
   [grid src]

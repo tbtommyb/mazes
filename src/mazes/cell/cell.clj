@@ -9,10 +9,9 @@
   ([coords links] (hash-map :coords coords :links links)))
 
 (defn links-at
-  "Returns any linked cells to `cell` in cartesian `direction`"
+  "Returns any linked cells to `cell` in `direction`"
   [cell direction]
   {:pre [(s/valid? (s/nilable ::spec/cell?) cell)]}
-         ;; (s/valid? ::spec/cartesian-direction? direction)]}
   (get-in cell [:links direction]))
 
 (defn get-x
