@@ -19,6 +19,7 @@
 (defmulti get-cell :mask-type)
 (defmulti get-neighbouring-cells (fn [grid & args] (:type grid)))
 (defmulti direction-between-cells (fn [grid & args] (:type grid)))
+(defmulti get-linked-cells (fn [grid & args] (:type grid)))
 
 ;; move to cell?
 (defmethod direction-between-cells :cartesian
@@ -94,15 +95,17 @@
    :post [(s/valid? ::spec/cells %)]}
    (reduce #(assoc %1 %2 {}) {} (generate-coords rows cols)))
 
-(defn get-linked-cells
+(defn get-linked-cells-helper
   "In `grid` get all cells linked to `cell` in `directions`. Default all"
-  ([grid cell] (get-linked-cells grid cell cartesian-dirs))
   ([grid cell dirs]
    {:pre [(s/valid? ::spec/grid? grid)
           (s/valid? ::spec/cell? cell)]
-          ;; (s/valid? (s/coll-of ::spec/cartesian-direction?) dirs)]
     :post [(s/valid? ::spec/cell-list? %)]}
    (mapcat (fn [dir] (map (partial get-cell grid) (cell/links-at cell dir))) dirs)))
+
+(defmethod get-linked-cells :cartesian
+  ([grid cell] (get-linked-cells-helper grid cell cartesian-dirs))
+  ([grid cell dirs] (get-linked-cells-helper grid cell dirs)))
 
 (defn add-link
   [grid src dest dir]

@@ -135,37 +135,50 @@
     (io/render-svg (to-svg grid distances) "output.svg")))
 
 (defn svg-polar-cell
-  [grid center theta inner-radius outer-radius idx cell]
+  [grid distances center theta inner-radius outer-radius idx cell]
   (when-not (= (cell/coords cell) [0 0])
     (let [theta-ccw (* theta idx)
           theta-cw (* theta (inc idx))
           link? (fn [dir] (not-empty (grid/get-linked-cells grid cell (list dir))))
+          colour (background-colour-for distances cell)
           ax (+ center (unchecked-int (* inner-radius (Math/cos theta-ccw))))
           ay (+ center (unchecked-int (* inner-radius (Math/sin theta-ccw))))
+          bx (+ center (unchecked-int (* outer-radius (Math/cos theta-ccw))))
+          by (+ center (unchecked-int (* outer-radius (Math/sin theta-ccw))))
           cx (+ center (unchecked-int (* inner-radius (Math/cos theta-cw))))
           cy (+ center (unchecked-int (* inner-radius (Math/sin theta-cw))))
           dx (+ center (unchecked-int (* outer-radius (Math/cos theta-cw))))
           dy (+ center (unchecked-int (* outer-radius (Math/sin theta-cw))))]
       [:dali/page
-       [:path {:stroke (if (link? :inner) :white :black) :fill :white} :M [ax ay] :A [inner-radius inner-radius] theta-ccw false true [cx cy]]
-       [:line {:stroke (if (link? :cw) :white :black) :fill :white} [cx cy] [dx dy]]])))
+       [:path {:fill colour}
+        :M [ax ay]
+        :L [bx by]
+        :A [inner-radius inner-radius] theta-ccw false true [dx dy]
+        :L [cx cy]
+        :A [inner-radius inner-radius] theta-ccw false false [ax ay]
+        :z]
+       [:path {:stroke (if (link? :inner) colour :black) :fill :none} :M [ax ay] :A [inner-radius inner-radius] theta-ccw false true [cx cy]]
+       [:line {:stroke (if (link? :cw) colour :black) :fill :none} [cx cy] [dx dy]]])))
 
 (defn svg-polar-row
-  [grid center idx row]
+  [grid distances center idx row]
   (let [theta (/ (* 2 Math/PI) (count row))
         inner-radius (* idx cell-size)
         outer-radius (* (inc idx) cell-size)]
-    (concat (map-indexed (partial svg-polar-cell grid center theta inner-radius outer-radius) row))))
+    (concat (map-indexed
+             (partial svg-polar-cell grid distances center theta inner-radius outer-radius)
+             row))))
 
 (defn svg-polar
   "Generate an SVG representation of this polar `grid`"
-  [grid]
+  [grid distances]
   (let [image-size (* 2 cell-size (:rows grid))]
     [:dali/page {:width (inc image-size) :height (inc image-size)}
      [:rect {:fill :white} [0 0] [(inc image-size) (inc image-size)]]
      [:circle {:fill :white :stroke :black } [(/ image-size 2) (/ image-size 2)] (* (:rows grid) cell-size)]
-     (apply concat (map-indexed (partial svg-polar-row grid (/ image-size 2)) (grid/iter-rows grid)))]))
+     (apply concat (map-indexed (partial svg-polar-row grid distances (/ image-size 2)) (grid/iter-rows grid)))]))
 
 (defn polar-out
   [grid filename & [opt]]
-  (io/render-png (svg-polar grid) filename))
+  (let [distances (:distances opt)]
+    (io/render-png (svg-polar grid distances) filename)))

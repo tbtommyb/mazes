@@ -11,9 +11,9 @@
 
 ;; (def my-grid (masked/new-grid "input.txt"))
 ;; (def my-grid (grid/new-grid 6 12))
-(def my-grid (polar/new-grid 20))
+(def my-grid (polar/new-grid 5))
 (def maze (algo/recursive-backtracker my-grid))
-;; (def distances (dist/dijkstra maze [3 3]))
-(pr/polar-out maze "polar-maze.png")
+(def distances (dist/dijkstra maze [0 0]))
+(pr/polar-out maze "polar-maze.png" {:distances distances})
 ;; (pr/out (pr/ascii-grid maze {:distances distances}))
 ;; (pr/png-out maze {:distances distances})

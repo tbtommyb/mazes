@@ -15,6 +15,8 @@
                          :ccw [-1 0]
                          :inner [0 -1]
                          :cw [1 0]})
+(def polar-dirs #{:outer :inner :ccw :cw})
+
 (defn count-row
   [cells y]
   (count (filter (fn [coord] (= y (second coord))) (keys cells))))
@@ -91,6 +93,10 @@
 (defmethod grid/get-neighbouring-cells :polar
   ([grid cell] (get-neighbours-helper grid cell '(:cw :ccw :inner :outer)))
   ([grid cell dirs] (get-neighbours-helper grid cell dirs)))
+
+(defmethod grid/get-linked-cells :polar
+  ([grid cell] (grid/get-linked-cells-helper grid cell polar-dirs))
+  ([grid cell dirs] (grid/get-linked-cells-helper grid cell dirs)))
 
 (defn new-grid
   "Create a polar grid with `rows` rows"
