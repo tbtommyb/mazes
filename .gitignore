@@ -1,4 +1,12 @@
 .nrepl-port
 output.png
 output.svg
-.lein-failures
+.*.jar
+target
+clojure.iws
+clojure.ipr
+nbproject/private/
+maven-classpath
+maven-classpath.properties
+.idea/lein-failures
+.DS_Store
