@@ -136,7 +136,7 @@
   [grid cell]
   {:pre [(s/valid? ::spec/grid? grid)
          (s/valid? ::spec/cell? cell)]
-   :post [(s/valid? boolean? %)]}
+   :post [(s/valid? (s/nilable boolean?) %)]}
   (some cell/visited? (gr/get-neighbouring-cells grid cell)))
 
 (defn hunt-for-cell

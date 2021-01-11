@@ -125,14 +125,14 @@
      (map (partial svg-cell grid height distances) (grid/iter-grid grid))]))
 
 (defn png-out
-  [grid & [opt]]
+  [grid filename & [opt]]
   (let [distances (:distances opt)]
-    (io/render-png (to-svg grid distances) "output.png")))
+    (io/render-png (to-svg grid distances) filename)))
 
 (defn svg-out
-  [grid & [opt]]
+  [grid filename & [opt]]
   (let [distances (:distances opt)]
-    (io/render-svg (to-svg grid distances) "output.svg")))
+    (io/render-svg (to-svg grid distances) filename)))
 
 (defn svg-polar-cell
   [grid distances center theta inner-radius outer-radius idx cell]
