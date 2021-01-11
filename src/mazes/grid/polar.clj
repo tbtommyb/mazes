@@ -49,14 +49,7 @@
     (some #{(cell/coords to)} (map cell/coords (grid/get-neighbouring-cells grid from '(:inner)))) :inner
     (some #{(cell/coords to)} (map cell/coords (grid/get-neighbouring-cells grid from '(:outer)))) :outer))
 
-(declare get-neighbours-helper)
-;; TODO this is inefficient but works
-(defn find-children-of
-  [grid parent]
-  (filter (fn [cell] (some #{parent} (get-neighbours-helper grid cell '(:inner))))
-   (grid/iter-grid grid)))
-
-(defn get-outer
+(defn get-outer-neighbours
   [grid src]
   (if (= (dec (cell/get-y src)) (:rows grid))
     '()
@@ -79,13 +72,14 @@
       (grid/iter-row grid 1)
       '())
     (let [[x y] (cell/coords src)
-          ratio (/ (count-row (:cells grid) (cell/get-y src))
-                   (count-row (:cells grid) (dec (cell/get-y src))))]
+          cols-in-row (count-row (:cells grid) y)
+          ratio (/ cols-in-row (count-row (:cells grid) (dec y)))
+          cell-list #(list (grid/get-cell grid %))]
       (cond
-        (= direction :cw) (list (grid/get-cell grid [(inc x) y]))
-        (= direction :ccw) (list (grid/get-cell grid [(dec x) y]))
-        (= direction :inner) (list (grid/get-cell grid [(int (/ x ratio)) (dec y)]))
-        (= direction :outer) (get-outer grid src)))))
+        (= direction :cw) (cell-list [(rem (inc x) cols-in-row) y])
+        (= direction :ccw) (cell-list [(mod (dec x) cols-in-row) y])
+        (= direction :inner) (cell-list [(int (/ x ratio)) (dec y)])
+        (= direction :outer) (get-outer-neighbours grid src)))))
 
 (defn get-neighbours-helper
   [grid cell dirs]
