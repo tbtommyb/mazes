@@ -10,3 +10,4 @@ maven-classpath
 maven-classpath.properties
 .idea/lein-failures
 .DS_Store
+.lein-failures
