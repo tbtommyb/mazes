@@ -9,11 +9,11 @@
    [mazes.algorithms :as algo]
    [mazes.utils :as utils]))
 
-;; (def my-grid (masked/new-grid "input.txt"))
-;; (def my-grid (grid/new-grid 6 12))
-(def my-grid (polar/new-grid 5))
-(def maze (algo/recursive-backtracker my-grid))
-(def distances (dist/dijkstra maze [0 0]))
-(pr/polar-out maze "polar-maze.png" {:distances distances})
+(def maze (algo/recursive-backtracker (polar/new-grid 20)))
+(def distances (dist/dijkstra maze [5 18]))
+(pr/polar-out maze "polar-maze-distances.png" {:distances distances})
+(pr/polar-out maze "polar-maze.png")
 ;; (pr/out (pr/ascii-grid maze {:distances distances}))
 ;; (pr/png-out maze {:distances distances})
+;; (def my-grid (masked/new-grid "input.txt"))
+;; (def my-grid (grid/new-grid 6 12))

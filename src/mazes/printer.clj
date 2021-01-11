@@ -72,7 +72,7 @@
   {:pre [(s/valid? (s/nilable ::spec/distances?) distances)
          (s/valid? ::spec/cell? cell)]}
   (if (nil? distances)
-    :white
+    :none
     (let [distance (dist/get-distance distances cell)
           furthest (apply max (remove #{Integer/MAX_VALUE} (vals distances)))
           intensity (/ (float (- furthest distance)) furthest)
@@ -136,7 +136,9 @@
 
 (defn svg-polar-cell
   [grid distances center theta inner-radius outer-radius idx cell]
-  (when-not (= (cell/coords cell) [0 0])
+  (if (= (cell/coords cell) [0 0])
+    [:dali/page {:fill (background-colour-for distances cell)}
+     [:circle {:cx center :cy center :r outer-radius}]]
     (let [theta-ccw (* theta idx)
           theta-cw (* theta (inc idx))
           link? (fn [dir] (not-empty (grid/get-linked-cells grid cell (list dir))))
@@ -150,7 +152,7 @@
           dx (+ center (unchecked-int (* outer-radius (Math/cos theta-cw))))
           dy (+ center (unchecked-int (* outer-radius (Math/sin theta-cw))))]
       [:dali/page
-       [:path {:fill colour}
+       [:path {:fill colour :stroke :none}
         :M [ax ay]
         :L [bx by]
         :A [inner-radius inner-radius] theta-ccw false true [dx dy]
@@ -171,14 +173,14 @@
 
 (defn svg-polar
   "Generate an SVG representation of this polar `grid`"
-  [grid distances]
-  (let [image-size (* 2 cell-size (:rows grid))]
+  [grid & [opt]]
+  (let [distances (:distances opt)
+        image-size (* 2 cell-size (:rows grid))]
     [:dali/page {:width (inc image-size) :height (inc image-size)}
      [:rect {:fill :white} [0 0] [(inc image-size) (inc image-size)]]
-     [:circle {:fill :white :stroke :black } [(/ image-size 2) (/ image-size 2)] (* (:rows grid) cell-size)]
-     (apply concat (map-indexed (partial svg-polar-row grid distances (/ image-size 2)) (grid/iter-rows grid)))]))
+     (apply concat (map-indexed (partial svg-polar-row grid distances (/ image-size 2)) (grid/iter-rows grid)))
+     [:circle {:fill :none :stroke :black } [(/ image-size 2) (/ image-size 2)] (* (:rows grid) cell-size)]]))
 
 (defn polar-out
   [grid filename & [opt]]
-  (let [distances (:distances opt)]
-    (io/render-png (svg-polar grid distances) filename)))
+  (io/render-png (svg-polar grid opt) filename))
