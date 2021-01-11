@@ -81,7 +81,7 @@ mazes.core> (pr/png-out maze {:distances dist})
 ```
 mazes.core> (def maze (algo/recursive-backtracker (polar/new-grid 20)))
 mazes.core> (def distances (dist/dijkstra maze [5 18]))
-mazes.core> (pr/polar-out maze "polar-maze-distances.png" {:distances distances})
+mazes.core> (pr/png-out maze "polar-maze-distances.png" {:distances distances})
 ```
 
 ![Polar coloured](https://github.com/tbtommyb/mazes/blob/master/images/polar-maze-distances.png?raw=true)

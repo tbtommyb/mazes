@@ -10,6 +10,8 @@
    [dali.layout.stack]
    [dali.layout.align]))
 
+(defmulti to-svg :type)
+
 (defn ascii-upper-row
   "Generate an ASCII representation of the upper half of `row`"
   [grid row cell-renderer]
@@ -112,8 +114,7 @@
     [:rect {:stroke colour :fill colour}
      [x1 y2] [cell-size cell-size]]))
 
-(defn to-svg
-  "Generate an SVG representation of `grid` and optionally `distances`"
+(defmethod to-svg :cartesian
   [grid distances]
   {:pre [(s/valid? ::spec/grid? grid)
          (s/valid? (s/nilable ::spec/distances?) distances)]}
@@ -171,16 +172,12 @@
              (partial svg-polar-cell grid distances center theta inner-radius outer-radius)
              row))))
 
-(defn svg-polar
-  "Generate an SVG representation of this polar `grid`"
-  [grid & [opt]]
-  (let [distances (:distances opt)
-        image-size (* 2 cell-size (:rows grid))]
+(defmethod to-svg :polar
+  [grid distances]
+  {:pre [(s/valid? ::spec/grid? grid)
+         (s/valid? (s/nilable ::spec/distances?) distances)]}
+  (let [image-size (* 2 cell-size (:rows grid))]
     [:dali/page {:width (inc image-size) :height (inc image-size)}
      [:rect {:fill :white} [0 0] [(inc image-size) (inc image-size)]]
      (apply concat (map-indexed (partial svg-polar-row grid distances (/ image-size 2)) (grid/iter-rows grid)))
      [:circle {:fill :none :stroke :black } [(/ image-size 2) (/ image-size 2)] (* (:rows grid) cell-size)]]))
-
-(defn polar-out
-  [grid filename & [opt]]
-  (io/render-png (svg-polar grid opt) filename))
