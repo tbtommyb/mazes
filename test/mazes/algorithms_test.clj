@@ -10,8 +10,7 @@
   (testing "Applying the binary tree algorithm to a grid"
     (binding [gen/*rnd* (java.util.Random. 5)]
       (is (= (binary-tree (grid/new-grid 2 2))
-             {:mask-type :unmasked
-              :type :cartesian
+             {:type :cartesian
               :rows 2
               :cols 2
               :cells {[0 0] {:east '([1 0])}
@@ -23,8 +22,7 @@
   (testing "Applying binary tree to a masked grid"
     (binding [gen/*rnd* (java.util.Random. 5)]
       (is (= (binary-tree (masked/new-grid "test/mazes/test-mask.txt"))
-             {:mask-type :masked
-              :type :cartesian
+             {:type :cartesian
               :rows 3
               :cols 5
               :cells {[2 2] {:west '([1 2]), :east '([3 2])}
@@ -63,8 +61,7 @@
   (testing "Applying the sidewinder algorithm to a grid"
     (binding [gen/*rnd* (java.util.Random. 5)]
       (is (= (sidewinder (grid/new-grid 2 2))
-             {:mask-type :unmasked
-              :type :cartesian
+             {:type :cartesian
               :rows 2
               :cols 2
               :cells {[0 0] {:north '([0 1])}
@@ -76,8 +73,7 @@
   (testing "Applying the Aldous-Broder algorithm to a grid"
     (binding [gen/*rnd* (java.util.Random. 5)]
       (is (= (aldous-broder (grid/new-grid 3 3))
-             {:mask-type :unmasked
-              :type :cartesian
+             {:type :cartesian
               :rows 3
               :cols 3
               :cells {[2 2] {:west '([1 2])}
@@ -94,8 +90,7 @@
   (testing "Applying the Wilson algorithm to a grid"
     (binding [gen/*rnd* (java.util.Random. 5)]
       (is (= (wilson (grid/new-grid 3 3))
-             {:mask-type :unmasked
-              :type :cartesian
+             {:type :cartesian
               :rows 3
               :cols 3
               :cells {[2 2] {:south '([2 1])}
@@ -112,8 +107,7 @@
   (testing "Applying the hunt and kill algorithm to a grid"
     (binding [gen/*rnd* (java.util.Random. 5)]
       (is (= (hunt-and-kill (grid/new-grid 3 3))
-             {:mask-type :unmasked
-              :type :cartesian
+             {:type :cartesian
               :rows 3
               :cols 3
               :cells {[2 2] {:south '([2 1]) :west '([1 2])}
@@ -130,8 +124,7 @@
   (testing "Applying the hunt and kill algorithm to a grid"
     (binding [gen/*rnd* (java.util.Random. 5)]
       (is (= (recursive-backtracker (grid/new-grid 3 3))
-             {:mask-type :unmasked
-              :type :cartesian
+             {:type :cartesian
               :rows 3
               :cols 3
               :cells {[2 2] {:south '([2 1]), :west '([1 2])}

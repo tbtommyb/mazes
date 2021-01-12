@@ -6,8 +6,7 @@
 (deftest new-grid-test
   (testing "Creating a grid"
     (is (= (new-grid 2 2)
-           {:mask-type :unmasked
-            :type :cartesian
+           {:type :cartesian
             :rows 2
             :cols 2
             :cells {[0 0] {}
@@ -15,8 +14,7 @@
                     [1 0] {}
                     [1 1] {}}}))
     (is (= (new-grid 1 2)
-           {:mask-type :unmasked
-            :type :cartesian
+           {:type :cartesian
             :rows 1
             :cols 2
             :cells {[0 0] {}
@@ -28,8 +26,7 @@
 
 (deftest get-links-test
   (testing "Testing getting a cell out of a grid"
-    (let [grid {:mask-type :unmasked
-                :type :cartesian
+    (let [grid {:type :cartesian
                 :rows 2
                 :cols 2
                 :cells {[0 0] {:north '(:a)}
@@ -78,8 +75,7 @@
   (testing "Cells can be linked to each other"
     (let [grid (new-grid 2 2)]
       (is (= (link-cells grid (cell/make [0 0]) (cell/make [0 1]))
-             {:mask-type :unmasked
-              :type :cartesian
+             {:type :cartesian
               :rows 2
               :cols 2
               :cells {[0 0] {:north '([0 1])}
@@ -87,8 +83,7 @@
                       [1 0] {}
                       [1 1] {}}}))
       (is (= (link-cells grid (cell/make [0 0]) (cell/make [1 1]))
-             {:mask-type :unmasked
-              :type :cartesian
+             {:type :cartesian
               :rows 2
               :cols 2
               :cells {[0 0] {}
@@ -96,8 +91,7 @@
                       [1 0] {}
                       [1 1] {}}}))
       (is (= (link-cells grid (cell/make [0 0]) (cell/make [0 0]))
-             {:mask-type :unmasked
-              :type :cartesian
+             {:type :cartesian
               :rows 2
               :cols 2
               :cells {[0 0] {}

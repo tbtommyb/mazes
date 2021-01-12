@@ -118,33 +118,12 @@
                remaining-unvisited
                (utils/safe-rand-nth remaining-unvisited))))))
 
-(defn visited-neighbours
-  [grid cell]
-  {:pre [(s/valid? ::spec/grid? grid)
-         (s/valid? ::spec/cell? cell)]
-   :post [(s/valid? ::spec/cell-list? %)]}
-  (filter cell/visited? (gr/get-neighbouring-cells grid cell)))
-
-(defn unvisited-neighbours
-  [grid cell]
-  {:pre [(s/valid? ::spec/grid? grid)
-         (s/valid? ::spec/cell? cell)]
-   :post [(s/valid? ::spec/cell-list? %)]}
-  (remove cell/visited? (gr/get-neighbouring-cells grid cell)))
-
-(defn cell-has-visited-neighbours?
-  [grid cell]
-  {:pre [(s/valid? ::spec/grid? grid)
-         (s/valid? ::spec/cell? cell)]
-   :post [(s/valid? (s/nilable boolean?) %)]}
-  (some cell/visited? (gr/get-neighbouring-cells grid cell)))
-
 (defn hunt-for-cell
   [grid]
   (->> grid
       gr/iter-grid
       (remove cell/visited?)
-      (filter (partial cell-has-visited-neighbours? grid))
+      (filter (partial gr/cell-has-visited-neighbours? grid))
       first))
 
 (defn hunt-and-kill
@@ -156,11 +135,11 @@
          curr (utils/safe-rand-nth (gr/iter-grid grid))]
     (if (nil? curr)
       maze
-      (if-let [unvisited-neighbour (utils/safe-rand-nth (unvisited-neighbours maze curr))]
+      (if-let [unvisited-neighbour (utils/safe-rand-nth (gr/unvisited-neighbours maze curr))]
         (recur (gr/link-cells maze curr unvisited-neighbour)
                unvisited-neighbour)
         (if-let [new-curr (hunt-for-cell maze)]
-          (let [visited-neighbour (utils/safe-rand-nth (visited-neighbours maze new-curr))]
+          (let [visited-neighbour (utils/safe-rand-nth (gr/visited-neighbours maze new-curr))]
             (recur (gr/link-cells maze new-curr visited-neighbour)
                    new-curr))
           maze)))))
@@ -173,7 +152,7 @@
   (loop [maze grid
          visited [(utils/safe-rand-nth (gr/iter-grid grid))]]
     (if-let [curr (first visited)]
-      (if-let [unvisited-neighbour (utils/safe-rand-nth (unvisited-neighbours maze curr))]
+      (if-let [unvisited-neighbour (utils/safe-rand-nth (gr/unvisited-neighbours maze curr))]
         (recur (gr/link-cells maze curr unvisited-neighbour)
                (conj visited unvisited-neighbour))
         (recur maze (rest visited)))

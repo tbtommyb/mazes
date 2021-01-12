@@ -99,7 +99,6 @@
 (defn new-grid
   "Create a polar grid with `rows` rows"
   [rows]
-  {:mask-type :unmasked
-   :type :polar
+  {:type :polar
    :rows rows
    :cells (init-cells rows)})

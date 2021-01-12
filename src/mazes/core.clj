@@ -14,10 +14,10 @@
 ;; (pr/png-out maze "images/polar-maze-distances.png" {:distances distances})
 ;; (pr/png-out maze "images/polar-maze.png")
 
-(def square (-> (grid/new-grid 10 10)
-                (algo/hunt-and-kill)
-                (grid/braid {:p 0.3})))
-(pr/png-out square "images/square-maze.png")
+;; (def square (-> (grid/new-grid 10 10)
+;;                 (algo/hunt-and-kill)
+;;                 (grid/braid {:p 0.3})))
+;; (pr/png-out square "images/square-maze.png")
 
 ;; (def masked (algo/hunt-and-kill (masked/new-grid "mask.txt")))
 ;; (def masked-distances (dist/dijkstra masked [3 3]))

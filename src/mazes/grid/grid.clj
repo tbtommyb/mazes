@@ -1,7 +1,6 @@
 (ns mazes.grid.grid
   (:require
    [mazes.cell.cell :as cell]
-   [mazes.algorithms :as algo]
    [mazes.utils :as utils]
    [mazes.specs :as spec]
    [clojure.spec.alpha :as s]))
@@ -17,8 +16,9 @@
 (def cartesian-dirs #{:north :south :east :west})
 
 ;; TODO simply check if grid has a :mask key
-(defmulti size :mask-type)
-(defmulti get-cell :mask-type)
+(defn has-mask? [grid & args] (if (:mask grid) :masked :unmasked))
+(defmulti size has-mask?)
+(defmulti get-cell has-mask?)
 (defmulti get-neighbouring-cells (fn [grid & args] (:type grid)))
 (defmulti direction-between-cells (fn [grid & args] (:type grid)))
 (defmulti get-linked-cells (fn [grid & args] (:type grid)))
@@ -51,6 +51,27 @@
           (s/valid? ::spec/cell? cell)]
     :post [(s/valid? ::spec/cell-list? %)]}
    (keep #(get-neighbour-at grid cell %) dirs)))
+
+(defn visited-neighbours
+  [grid cell]
+  {:pre [(s/valid? ::spec/grid? grid)
+         (s/valid? ::spec/cell? cell)]
+   :post [(s/valid? ::spec/cell-list? %)]}
+  (filter cell/visited? (get-neighbouring-cells grid cell)))
+
+(defn unvisited-neighbours
+  [grid cell]
+  {:pre [(s/valid? ::spec/grid? grid)
+         (s/valid? ::spec/cell? cell)]
+   :post [(s/valid? ::spec/cell-list? %)]}
+  (remove cell/visited? (get-neighbouring-cells grid cell)))
+
+(defn cell-has-visited-neighbours?
+  [grid cell]
+  {:pre [(s/valid? ::spec/grid? grid)
+         (s/valid? ::spec/cell? cell)]
+   :post [(s/valid? (s/nilable boolean?) %)]}
+  (some cell/visited? (get-neighbouring-cells grid cell)))
 
 (defn get-cell-helper
   "Return the cell located in `grid` at `coord`"
@@ -163,8 +184,7 @@
   {:pre [(s/valid? ::spec/rows rows)
          (s/valid? ::spec/cols cols)]
    :post [(s/valid? ::spec/grid? %)]}
-  {:mask-type :unmasked
-   :type :cartesian
+  {:type :cartesian
    :rows rows
    :cols cols
    :cells (init-cells rows cols)})

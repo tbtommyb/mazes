@@ -10,8 +10,7 @@
 
 (deftest ascii-grid-test
   (testing "A grid is correctly rendered in ASCII"
-    (let [grid {:mask-type :unmasked
-                :rows 2
+    (let [grid {:rows 2
                 :cols 2
                 :cells {[0 0] {:east '([1 0])}
                         [0 1] {:east '([1 1])}

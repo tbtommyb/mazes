@@ -34,8 +34,7 @@
         cells (grid/init-cells rows cols)
         char-at (fn [[x y]] (get (get data (- rows (inc y))) x))
         mask (init-mask (grid/generate-coords rows cols) char-at)]
-    {:mask-type :masked
-     :type :cartesian
+    {:type :cartesian
      :rows rows
      :cols cols
      :cells cells
