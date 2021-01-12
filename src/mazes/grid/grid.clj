@@ -15,8 +15,8 @@
                          :east [1 0]})
 (def cartesian-dirs #{:north :south :east :west})
 
-;; TODO simply check if grid has a :mask key
 (defn has-mask? [grid & args] (if (:mask grid) :masked :unmasked))
+(defn has-weighting? [grid & args] (if (:weighting grid) :weighted :unweighted))
 (defmulti size has-mask?)
 (defmulti get-cell has-mask?)
 (defmulti get-neighbouring-cells (fn [grid & args] (:type grid)))
@@ -79,8 +79,8 @@
   {:pre [(s/valid? ::spec/coords coord)
          (s/valid? ::spec/grid? grid)]
    :post [(s/valid? (s/nilable ::spec/cell?) %)]}
-  (when-let [links (get-in grid [:cells coord])]
-    (cell/make coord links)))
+  (when-let [cell-body (get-in grid [:cells coord])]
+    (cell/make coord cell-body)))
 
 (defn generate-coords
   "Generate every coordinate for grid of size `rows` by `cols`"
@@ -115,7 +115,7 @@
   {:pre [(s/valid? ::spec/rows rows)
          (s/valid? ::spec/cols cols)]
    :post [(s/valid? ::spec/cells %)]}
-   (reduce #(assoc %1 %2 {}) {} (generate-coords rows cols)))
+   (reduce #(assoc %1 %2 {:links {}}) {} (generate-coords rows cols)))
 
 (defn get-linked-cells-helper
   "In `grid` get all cells linked to `cell` in `directions`. Default all"
@@ -131,7 +131,7 @@
 
 (defn add-link
   [grid src dest dir]
-  (update-in grid [:cells (cell/coords src) dir] #(conj % (cell/coords dest))))
+  (update-in grid [:cells (cell/coords src) :links dir] #(conj % (cell/coords dest))))
 
 (defn link-cells
   "Record a link in `grid` from `src` to `dest` if they are neighbours. Default bidirectional"

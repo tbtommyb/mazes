@@ -12,10 +12,10 @@
   (testing "A grid is correctly rendered in ASCII"
     (let [grid {:rows 2
                 :cols 2
-                :cells {[0 0] {:east '([1 0])}
-                        [0 1] {:east '([1 1])}
-                        [1 0] {:west '([0 0]) :north '([1 1])}
-                        [1 1] {:west '([0 1]) :south '([1 0])}}}]
+                :cells {[0 0] {:links {:east '([1 0])}}
+                        [0 1] {:links {:east '([1 1])}}
+                        [1 0] {:links {:west '([0 0]) :north '([1 1])}}
+                        [1 1] {:links {:west '([0 1]) :south '([1 0])}}}}]
       (is (= (ascii-grid grid)
              '("+" "---+" "---+" "\n"
                "|" "    " "   |" "\n"

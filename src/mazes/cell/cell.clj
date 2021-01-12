@@ -5,8 +5,8 @@
    [clojure.spec.alpha :as s]))
 
 (defn make
-  ([coords] (make coords {}))
-  ([coords links] (hash-map :coords coords :links links)))
+  ([coords] (make coords {:links {}}))
+  ([coords cell-body] (assoc cell-body :coords coords)))
 
 (defn links-at
   "Returns any linked cells to `cell` in `direction`"

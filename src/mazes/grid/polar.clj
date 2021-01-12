@@ -30,14 +30,14 @@
                   est-width (/ circ prev-count)
                   ratio (int (/ est-width row-height))
                   cell-count (* ratio prev-count)]
-              (reduce #(assoc %1 [%2 row] {}) cells (range cell-count))))]
+              (reduce #(assoc %1 [%2 row] {:links {}}) cells (range cell-count))))]
     (reduce f cells (range 1 row-count))))
 
 (defn init-cells
   [row-count]
   (let [row-height (/ 1.0 row-count)]
     (-> {}
-        (assoc [0 0] {})
+        (assoc [0 0] {:links {}})
         (populate-rows row-height row-count))))
 
 ;; TODO refactor

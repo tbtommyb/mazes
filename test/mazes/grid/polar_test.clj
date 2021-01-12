@@ -9,25 +9,25 @@
     (is (= (new-grid 3)
            {:type :polar
             :rows 3
-            :cells {[11 2] {}
-                    [2 2] {}
-                    [0 0] {}
-                    [7 2] {}
-                    [1 1] {}
-                    [4 2] {}
-                    [4 1] {}
-                    [5 2] {}
-                    [10 2] {}
-                    [8 2] {}
-                    [5 1] {}
-                    [9 2] {}
-                    [0 2] {}
-                    [3 1] {}
-                    [2 1] {}
-                    [6 2] {}
-                    [1 2] {}
-                    [3 2] {}
-                    [0 1] {}}}))))
+            :cells {[11 2] {:links {}}
+                    [2 2] {:links {}}
+                    [0 0] {:links {}}
+                    [7 2] {:links {}}
+                    [1 1] {:links {}}
+                    [4 2] {:links {}}
+                    [4 1] {:links {}}
+                    [5 2] {:links {}}
+                    [10 2] {:links {}}
+                    [8 2] {:links {}}
+                    [5 1] {:links {}}
+                    [9 2] {:links {}}
+                    [0 2] {:links {}}
+                    [3 1] {:links {}}
+                    [2 1] {:links {}}
+                    [6 2] {:links {}}
+                    [1 2] {:links {}}
+                    [3 2] {:links {}}
+                    [0 1] {:links {}}}}))))
 
 ;; TODO handle wrap around
 (deftest get-neighbouring-cells-test
@@ -56,25 +56,25 @@
   (testing "Finding neighbours of a polar grid with links"
     (let [grid {:type :polar
                 :rows 3
-                :cells {[11 2] {}
-                        [2 2] {}
-                        [0 0] {}
-                        [7 2] {}
-                        [1 1] {}
-                        [4 2] {}
-                        [4 1] {}
-                        [5 2] {}
-                        [10 2] {}
-                        [8 2] {}
-                        [5 1] {}
-                        [9 2] {}
-                        [0 2] {}
-                        [3 1] {:outer '([6 2])}
-                        [2 1] {}
-                        [6 2] {:inner '([3 1])}
-                        [1 2] {}
-                        [3 2] {}
-                        [0 1] {}}}
+                :cells {[11 2] {:links {}}
+                        [2 2] {:links {}}
+                        [0 0] {:links {}}
+                        [7 2] {:links {}}
+                        [1 1] {:links {}}
+                        [4 2] {:links {}}
+                        [4 1] {:links {}}
+                        [5 2] {:links {}}
+                        [10 2] {:links {}}
+                        [8 2] {:links {}}
+                        [5 1] {:links {}}
+                        [9 2] {:links {}}
+                        [0 2] {:links {}}
+                        [3 1] {:links {:outer '([6 2])}}
+                        [2 1] {:links {}}
+                        [6 2] {:links {:inner '([3 1])}}
+                        [1 2] {:links {}}
+                        [3 2] {:links {}}
+                        [0 1] {:links {}}}}
           mid-row (grid/get-cell grid [3 1])]
       (is (= (grid/get-neighbouring-cells grid mid-row '(:cw))
              '({:coords [4 1] :links {}})))
@@ -90,25 +90,25 @@
   (testing "Finding neighbours of a polar grid"
     (let [grid {:type :polar
                 :rows 3
-                :cells {[11 2] {}
-                        [2 2] {}
-                        [0 0] {}
-                        [7 2] {}
-                        [1 1] {}
-                        [4 2] {}
-                        [4 1] {}
-                        [5 2] {}
-                        [10 2] {}
-                        [8 2] {}
-                        [5 1] {}
-                        [9 2] {}
-                        [0 2] {}
-                        [3 1] {:outer '([6 2])}
-                        [2 1] {}
-                        [6 2] {:inner '([3 1])}
-                        [1 2] {}
-                        [3 2] {}
-                        [0 1] {}}}
+                :cells {[11 2] {:links {}}
+                        [2 2] {:links {}}
+                        [0 0] {:links {}}
+                        [7 2] {:links {}}
+                        [1 1] {:links {}}
+                        [4 2] {:links {}}
+                        [4 1] {:links {}}
+                        [5 2] {:links {}}
+                        [10 2] {:links {}}
+                        [8 2] {:links {}}
+                        [5 1] {:links {}}
+                        [9 2] {:links {}}
+                        [0 2] {:links {}}
+                        [3 1] {:links {:outer '([6 2])}}
+                        [2 1] {:links {}}
+                        [6 2] {:links {:inner '([3 1])}}
+                        [1 2] {:links {}}
+                        [3 2] {:links {}}
+                        [0 1] {:links {}}}}
           mid-row (grid/get-cell grid [3 1])]
       (is (= (grid/direction-between-cells grid (cell/make [3 1]) (cell/make [4 1]))
              :cw))

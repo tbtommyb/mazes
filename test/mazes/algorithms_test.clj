@@ -13,10 +13,10 @@
              {:type :cartesian
               :rows 2
               :cols 2
-              :cells {[0 0] {:east '([1 0])}
-                      [0 1] {:east '([1 1])}
-                      [1 0] {:west '([0 0]) :north '([1 1])}
-                      [1 1] {:west '([0 1]) :south '([1 0])}}})))))
+              :cells {[0 0] {:links {:east '([1 0])}}
+                      [0 1] {:links {:east '([1 1])}}
+                      [1 0] {:links {:west '([0 0]) :north '([1 1])}}
+                      [1 1] {:links {:west '([0 1]) :south '([1 0])}}}})))))
 
 (deftest masked-binary-tree-test
   (testing "Applying binary tree to a masked grid"
@@ -25,22 +25,21 @@
              {:type :cartesian
               :rows 3
               :cols 5
-              :cells {[2 2] {:west '([1 2]), :east '([3 2])}
-                      [0 0] {:east '([1 0])}
-                      [1 0] {:west '([0 0])
-                             :north '([1 1])}
-                      [1 1] {:west '([0 1]), :south '([1 0]), :north '([1 2])}
-                      [4 2] {}
-                      [3 0] {:west '([2 0]), :north '([3 1])}
-                      [4 1] {}
-                      [0 2] {}
-                      [2 0] {:east '([3 0])}
-                      [3 1] {:south '([3 0]), :north '([3 2])}
-                      [2 1] {}
-                      [1 2] {:south '([1 1]), :east '([2 2])}
-                      [3 2] {:west '([2 2]), :south '([3 1])}
-                      [0 1] {:east '([1 1])}
-                      [4 0] {}}
+              :cells {[2 2] {:links {:west '([1 2]), :east '([3 2])}}
+                      [0 0] {:links {:east '([1 0])}}
+                      [1 0] {:links {:west '([0 0]) :north '([1 1])}}
+                      [1 1] {:links {:west '([0 1]), :south '([1 0]), :north '([1 2])}}
+                      [4 2] {:links {}}
+                      [3 0] {:links {:west '([2 0]), :north '([3 1])}}
+                      [4 1] {:links {}}
+                      [0 2] {:links {}}
+                      [2 0] {:links {:east '([3 0])}}
+                      [3 1] {:links {:south '([3 0]), :north '([3 2])}}
+                      [2 1] {:links {}}
+                      [1 2] {:links {:south '([1 1]), :east '([2 2])}}
+                      [3 2] {:links {:west '([2 2]), :south '([3 1])}}
+                      [0 1] {:links {:east '([1 1])}}
+                      [4 0] {:links {}}}
               :mask {[2 2] true
                      [0 0] true
                      [1 0] true
@@ -64,10 +63,10 @@
              {:type :cartesian
               :rows 2
               :cols 2
-              :cells {[0 0] {:north '([0 1])}
-                      [0 1] {:south '([0 0]) :east '([1 1])}
-                      [1 0] {:north '([1 1])}
-                      [1 1] {:west '([0 1]) :south '([1 0])}}})))))
+              :cells {[0 0] {:links {:north '([0 1])}}
+                      [0 1] {:links {:south '([0 0]) :east '([1 1])}}
+                      [1 0] {:links {:north '([1 1])}}
+                      [1 1] {:links {:west '([0 1]) :south '([1 0])}}}})))))
 
 (deftest aldous-broder-test
   (testing "Applying the Aldous-Broder algorithm to a grid"
@@ -76,15 +75,15 @@
              {:type :cartesian
               :rows 3
               :cols 3
-              :cells {[2 2] {:west '([1 2])}
-                      [0 0] {:east '([1 0])}
-                      [1 0] {:east '([2 0]) :north '([1 1]) :west '([0 0])}
-                      [1 1] {:south '([1 0]) :west '([0 1])}
-                      [0 2] {:south '([0 1]) :east '([1 2])}
-                      [2 0] {:north '([2 1]) :west '([1 0])}
-                      [2 1] {:south '([2 0])}
-                      [1 2] {:west '([0 2]) :east '([2 2])}
-                      [0 1] {:east '([1 1]) :north '([0 2])}}})))))
+              :cells {[2 2] {:links {:west '([1 2])}}
+                      [0 0] {:links {:east '([1 0])}}
+                      [1 0] {:links {:east '([2 0]) :north '([1 1]) :west '([0 0])}}
+                      [1 1] {:links {:south '([1 0]) :west '([0 1])}}
+                      [0 2] {:links {:south '([0 1]) :east '([1 2])}}
+                      [2 0] {:links {:north '([2 1]) :west '([1 0])}}
+                      [2 1] {:links {:south '([2 0])}}
+                      [1 2] {:links {:west '([0 2]) :east '([2 2])}}
+                      [0 1] {:links {:east '([1 1]) :north '([0 2])}}}})))))
 
 (deftest wilson-test
   (testing "Applying the Wilson algorithm to a grid"
@@ -93,15 +92,15 @@
              {:type :cartesian
               :rows 3
               :cols 3
-              :cells {[2 2] {:south '([2 1])}
-                      [0 0] {:north '([0 1])}
-                      [1 0] {:east '([2 0])}
-                      [1 1] {:east '([2 1]) :west '([0 1]) :north '([1 2])}
-                      [0 2] {:south '([0 1])}
-                      [2 0] {:north '([2 1]) :west '([1 0])}
-                      [2 1] {:south '([2 0]) :west '([1 1]) :north '([2 2])}
-                      [1 2] {:south '([1 1])}
-                      [0 1] {:east '([1 1]) :south '([0 0]) :north '([0 2])}}})))))
+              :cells {[2 2] {:links {:south '([2 1])}}
+                      [0 0] {:links {:north '([0 1])}}
+                      [1 0] {:links {:east '([2 0])}}
+                      [1 1] {:links {:east '([2 1]) :west '([0 1]) :north '([1 2])}}
+                      [0 2] {:links {:south '([0 1])}}
+                      [2 0] {:links {:north '([2 1]) :west '([1 0])}}
+                      [2 1] {:links {:south '([2 0]) :west '([1 1]) :north '([2 2])}}
+                      [1 2] {:links {:south '([1 1])}}
+                      [0 1] {:links {:east '([1 1]) :south '([0 0]) :north '([0 2])}}}})))))
 
 (deftest hunt-and-kill-test
   (testing "Applying the hunt and kill algorithm to a grid"
@@ -110,15 +109,15 @@
              {:type :cartesian
               :rows 3
               :cols 3
-              :cells {[2 2] {:south '([2 1]) :west '([1 2])}
-                      [0 0] {:north '([0 1]) :east '([1 0])}
-                      [1 0] {:west '([0 0])}
-                      [1 1] {:north '([1 2]) :west '([0 1])}
-                      [0 2] {:south '([0 1])}
-                      [2 0] {:north '([2 1])}
-                      [2 1] {:south '([2 0]) :north '([2 2])}
-                      [1 2] {:east '([2 2]) :south '([1 1])}
-                      [0 1] {:east '([1 1]) :north '([0 2]) :south '([0 0])}}})))))
+              :cells {[2 2] {:links {:south '([2 1]) :west '([1 2])}}
+                      [0 0] {:links {:north '([0 1]) :east '([1 0])}}
+                      [1 0] {:links {:west '([0 0])}}
+                      [1 1] {:links {:north '([1 2]) :west '([0 1])}}
+                      [0 2] {:links {:south '([0 1])}}
+                      [2 0] {:links {:north '([2 1])}}
+                      [2 1] {:links {:south '([2 0]) :north '([2 2])}}
+                      [1 2] {:links {:east '([2 2]) :south '([1 1])}}
+                      [0 1] {:links {:east '([1 1]) :north '([0 2]) :south '([0 0])}}}})))))
 
 (deftest recursive-backtracker-test
   (testing "Applying the hunt and kill algorithm to a grid"
@@ -127,12 +126,12 @@
              {:type :cartesian
               :rows 3
               :cols 3
-              :cells {[2 2] {:south '([2 1]), :west '([1 2])}
-                      [0 0] {:north '([0 1])}
-                      [1 0] {:east '([2 0])}
-                      [1 1] {:west '([0 1])}
-                      [0 2] {:east '([1 2]) :south '([0 1])}
-                      [2 0] {:north '([2 1]) :west '([1 0])}
-                      [2 1] {:south '([2 0]) :north '([2 2])}
-                      [1 2] {:east '([2 2]) :west '([0 2])}
-                      [0 1] {:north '([0 2]) :east '([1 1]) :south '([0 0])}}})))))
+              :cells {[2 2] {:links {:south '([2 1]), :west '([1 2])}}
+                      [0 0] {:links {:north '([0 1])}}
+                      [1 0] {:links {:east '([2 0])}}
+                      [1 1] {:links {:west '([0 1])}}
+                      [0 2] {:links {:east '([1 2]) :south '([0 1])}}
+                      [2 0] {:links {:north '([2 1]) :west '([1 0])}}
+                      [2 1] {:links {:south '([2 0]) :north '([2 2])}}
+                      [1 2] {:links {:east '([2 2]) :west '([0 2])}}
+                      [0 1] {:links {:north '([0 2]) :east '([1 1]) :south '([0 0])}}}})))))

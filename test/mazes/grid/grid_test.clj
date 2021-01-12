@@ -9,16 +9,16 @@
            {:type :cartesian
             :rows 2
             :cols 2
-            :cells {[0 0] {}
-                    [0 1] {}
-                    [1 0] {}
-                    [1 1] {}}}))
+            :cells {[0 0] {:links {}}
+                    [0 1] {:links {}}
+                    [1 0] {:links {}}
+                    [1 1] {:links {}}}}))
     (is (= (new-grid 1 2)
            {:type :cartesian
             :rows 1
             :cols 2
-            :cells {[0 0] {}
-                    [1 0] {}}}))))
+            :cells {[0 0] {:links {}}
+                    [1 0] {:links {}}}}))))
 
 (deftest size-test
   (testing "Finding the size of a grid"
@@ -29,10 +29,10 @@
     (let [grid {:type :cartesian
                 :rows 2
                 :cols 2
-                :cells {[0 0] {:north '(:a)}
-                        [0 1] {:south '(:b)}
-                        [1 0] {:west '(:c)}
-                        [1 1] {:east '(:d)}}}]
+                :cells {[0 0] {:links {:north '(:a)}}
+                        [0 1] {:links {:south '(:b)}}
+                        [1 0] {:links {:west '(:c)}}
+                        [1 1] {:links {:east '(:d)}}}}]
       (is (= {:coords [0 0] :links {:north '(:a)}} (get-cell grid [0 0])))
       (is (= {:coords [0 1] :links {:south '(:b)}} (get-cell grid [0 1])))
       (is (= {:coords [1 0] :links {:west '(:c)}} (get-cell grid [1 0])))
@@ -78,26 +78,26 @@
              {:type :cartesian
               :rows 2
               :cols 2
-              :cells {[0 0] {:north '([0 1])}
-                      [0 1] {:south '([0 0])}
-                      [1 0] {}
-                      [1 1] {}}}))
+              :cells {[0 0] {:links {:north '([0 1])}}
+                      [0 1] {:links {:south '([0 0])}}
+                      [1 0] {:links {}}
+                      [1 1] {:links {}}}}))
       (is (= (link-cells grid (cell/make [0 0]) (cell/make [1 1]))
              {:type :cartesian
               :rows 2
               :cols 2
-              :cells {[0 0] {}
-                      [0 1] {}
-                      [1 0] {}
-                      [1 1] {}}}))
+              :cells {[0 0] {:links {}}
+                      [0 1] {:links {}}
+                      [1 0] {:links {}}
+                      [1 1] {:links {}}}}))
       (is (= (link-cells grid (cell/make [0 0]) (cell/make [0 0]))
              {:type :cartesian
               :rows 2
               :cols 2
-              :cells {[0 0] {}
-                      [0 1] {}
-                      [1 0] {}
-                      [1 1] {}}})))))
+              :cells {[0 0] {:links {}}
+                      [0 1] {:links {}}
+                      [1 0] {:links {}}
+                      [1 1] {:links {}}}})))))
 
 (deftest get-neighbouring-cells-test
   (testing "Find cells neighbouring a given cell"
