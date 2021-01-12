@@ -41,3 +41,22 @@
   {:pre [(s/valid? ::spec/cell? cell)]
    :post [(s/valid? boolean? %)]}
   ((complement empty?) (:links cell)))
+
+(defn links
+  [cell]
+  {:pre [(s/valid? ::spec/cell? cell)]}
+  (apply concat (vals (:links cell))))
+
+(defn dead-end?
+  "Boolean whether `cell` is a dead end"
+  [cell]
+  {:pre [(s/valid? ::spec/cell? cell)]
+   :post [(s/valid? boolean? %)]}
+  (= 1 (count (links cell))))
+
+(defn linked-to?
+  "Determine whether `cell` is linked to `target`"
+  [target cell]
+  {:pre [(s/valid? ::spec/cell? cell)
+         (s/valid? ::spec/cell? target)]}
+  (some #{(coords target)} (links cell)))

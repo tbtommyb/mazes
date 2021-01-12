@@ -1,6 +1,8 @@
 (ns mazes.grid.grid
   (:require
    [mazes.cell.cell :as cell]
+   [mazes.algorithms :as algo]
+   [mazes.utils :as utils]
    [mazes.specs :as spec]
    [clojure.spec.alpha :as s]))
 
@@ -50,7 +52,6 @@
     :post [(s/valid? ::spec/cell-list? %)]}
    (keep #(get-neighbour-at grid cell %) dirs)))
 
-;; new, keep all this
 (defn get-cell-helper
   "Return the cell located in `grid` at `coord`"
   [grid coord]
@@ -125,6 +126,36 @@
      (cond-> grid
        (some? direction) (add-link src dest direction)
        (and bidirectional (some? reverse)) (add-link dest src reverse)))))
+
+(defn get-unlinked-neighbours
+  [grid cell]
+  (filter (complement (partial cell/linked-to? cell)) (get-neighbouring-cells grid cell)))
+
+(defn dead-end-neighbours
+  [grid cell]
+  (filter cell/dead-end? (get-unlinked-neighbours grid cell)))
+
+(defn refresh-cells
+  "Pull all coords of `cells` from `grid`, to refresh links etc"
+  [grid cells]
+  (map #(get-cell grid (cell/coords %)) cells))
+
+(defn braid
+  [grid & [opt]]
+  (let [p (:p opt 1.0)]
+    (loop [maze grid
+           dead-ends (shuffle (filter cell/dead-end? (iter-grid maze)))]
+      (if (empty? dead-ends)
+        maze
+        (if (> (rand) p)
+          (recur maze (rest dead-ends))
+          (let [dead-end (first dead-ends)
+                neighbour (or (utils/safe-rand-nth (dead-end-neighbours maze dead-end))
+                              (utils/safe-rand-nth (get-unlinked-neighbours maze dead-end)))
+                new-maze (link-cells maze dead-end neighbour)]
+            (recur new-maze
+                   (remove (complement cell/dead-end?)
+                           (refresh-cells new-maze (rest dead-ends))))))))))
 
 (defn new-grid
   "Create a grid of `rows` and `cols`"
