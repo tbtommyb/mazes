@@ -76,7 +76,7 @@ mazes.core> (def dist (dist/dijkstra maze [0 0]))
 mazes.core> (pr/png-out maze "images/sidewinder.png" {:distances dist})
 ```
 
-![Sidewinder coloured](https://github.com/tbtommyb/mazes/blob/master/images/sidewinder.png?raw=true)
+![Sidewinder coloured](https://github.com/tbtommyb/mazes/blob/master/images/readme-sidewinder.png?raw=true)
 
 ```
 mazes.core> (def maze (algo/recursive-backtracker (polar/new-grid 20)))
@@ -84,7 +84,7 @@ mazes.core> (def distances (dist/dijkstra maze [5 18]))
 mazes.core> (pr/png-out maze "polar-maze-distances.png" {:distances distances})
 ```
 
-![Polar coloured](https://github.com/tbtommyb/mazes/blob/master/images/polar-maze-distances.png?raw=true)
+![Polar coloured](https://github.com/tbtommyb/mazes/blob/master/images/readme-polar-maze-distances.png?raw=true)
 
 ## License
 
