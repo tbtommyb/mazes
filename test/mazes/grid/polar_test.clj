@@ -8,6 +8,7 @@
   (testing "Creating a polar grid"
     (is (= (new-grid 3)
            {:type :polar
+            :weighting :unweighted
             :rows 3
             :cells {[11 2] {:links {}}
                     [2 2] {:links {}}
@@ -55,6 +56,7 @@
                {:coords [5 1] :links {}})))))
   (testing "Finding neighbours of a polar grid with links"
     (let [grid {:type :polar
+                :weighting :unweighted
                 :rows 3
                 :cells {[11 2] {:links {}}
                         [2 2] {:links {}}
@@ -89,6 +91,7 @@
 (deftest get-neighbouring-cells-test
   (testing "Finding neighbours of a polar grid"
     (let [grid {:type :polar
+                :weighting :unweighted
                 :rows 3
                 :cells {[11 2] {:links {}}
                         [2 2] {:links {}}

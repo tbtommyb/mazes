@@ -7,6 +7,7 @@
   (testing "Creating a grid"
     (is (= (new-grid 2 2)
            {:type :cartesian
+            :weighting :unweighted
             :rows 2
             :cols 2
             :cells {[0 0] {:links {}}
@@ -15,6 +16,7 @@
                     [1 1] {:links {}}}}))
     (is (= (new-grid 1 2)
            {:type :cartesian
+            :weighting :unweighted
             :rows 1
             :cols 2
             :cells {[0 0] {:links {}}
@@ -27,6 +29,7 @@
 (deftest get-links-test
   (testing "Testing getting a cell out of a grid"
     (let [grid {:type :cartesian
+                :weighting :unweighted
                 :rows 2
                 :cols 2
                 :cells {[0 0] {:links {:north '(:a)}}
@@ -76,6 +79,7 @@
     (let [grid (new-grid 2 2)]
       (is (= (link-cells grid (cell/make [0 0]) (cell/make [0 1]))
              {:type :cartesian
+              :weighting :unweighted
               :rows 2
               :cols 2
               :cells {[0 0] {:links {:north '([0 1])}}
@@ -84,6 +88,7 @@
                       [1 1] {:links {}}}}))
       (is (= (link-cells grid (cell/make [0 0]) (cell/make [1 1]))
              {:type :cartesian
+              :weighting :unweighted
               :rows 2
               :cols 2
               :cells {[0 0] {:links {}}
@@ -92,6 +97,7 @@
                       [1 1] {:links {}}}}))
       (is (= (link-cells grid (cell/make [0 0]) (cell/make [0 0]))
              {:type :cartesian
+              :weighting :unweighted
               :rows 2
               :cols 2
               :cells {[0 0] {:links {}}

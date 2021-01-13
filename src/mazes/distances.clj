@@ -5,6 +5,9 @@
    [mazes.cell.cell :as cell]
    [mazes.grid.grid :as grid]))
 
+(defmulti dijkstra (fn [grid start] (:weighting grid)))
+(defmulti init-distances (fn [grid & args] (:weighting grid)))
+
 (defn set-distance
   "Set distance for `cell` in `distances` to `value`"
   [distances cell value]
@@ -20,26 +23,35 @@
   {:pre [(s/valid? ::spec/distances? distances)
          (s/valid? ::spec/cell? cell)]
    :post [(s/valid? ::spec/distance? %)]}
-  (get distances (cell/coords cell) Integer/MAX_VALUE))
+  (get distances (cell/coords cell)))
 
-(defn init-distances
-  "Initialise a `distances` map for `grid`"
-  [grid]
+(defmethod init-distances :unweighted
+  [grid & args]
   {:pre [(s/valid? ::spec/grid? grid)]
    :post [(s/valid? ::spec/distances? % )]}
-  (reduce #(set-distance %1 %2 Integer/MAX_VALUE)
+  (-> (reduce #(set-distance %1 %2 nil)
           {}
-          (grid/iter-grid grid)))
+          (grid/iter-grid grid))))
 
-(defn iter-dijkstra
-  "Populate `distances` from `start` in `grid`"
-  [distances grid start]
+(defmethod init-distances :weighted
+  [grid start-coord]
+  {:pre [(s/valid? ::spec/grid? grid)]
+   :post [(s/valid? ::spec/distances? % )]}
+  (-> (reduce #(set-distance %1 %2 nil)
+          {}
+          (grid/iter-grid grid))
+      (assoc start-coord 0)))
+
+(defn iter-dijkstra-unweighted
+  "Determine the distance of every cell in `grid` from `start`"
+  [distances grid frontier]
   {:pre [(s/valid? ::spec/distances? distances)
          (s/valid? ::spec/grid? grid)
-         (s/valid? ::spec/cell? start)]
+         (s/valid? ::spec/cell? frontier)]
    :post [(s/valid? ::spec/distances? %)]}
   (letfn [(update-dist [distances cell distance]
-            (if (< distance (get-distance distances cell))
+            (if (or (nil? (get-distance distances cell))
+                    (< distance (get-distance distances cell)))
               (iter-helper
                (set-distance distances cell distance)
                (grid/get-linked-cells grid cell)
@@ -47,18 +59,52 @@
               distances))
           (iter-helper [distances cells distance]
             (reduce #(update-dist %1 %2 distance) distances cells))]
-    (iter-helper distances (list start) 0)))
+    (iter-helper distances (list frontier) 0)))
+
+(declare process-neighbour)
+
+(defn iter-dijkstra-weighted
+  "Determine the distance of every cell in `grid` from `start`"
+  [weights grid pending]
+  {:pre [(s/valid? ::spec/distances? weights)
+         (s/valid? ::spec/grid? grid)
+         (s/valid? ::spec/cell-list? pending)]
+   :post [(s/valid? ::spec/distances? %)]}
+  (if (empty? pending)
+    weights
+    (let [sorted-pending (sort-by :weight pending)
+          cell (first sorted-pending)]
+      (reduce (partial process-neighbour grid cell (rest sorted-pending))
+              weights
+              (grid/get-linked-cells grid cell)))))
+
+(defn process-neighbour
+  [grid cell pending weights neighbour]
+  (let [total-weight (+ (get-distance weights cell) (:weight neighbour))]
+    (if (or (nil? (get-distance weights neighbour))
+            (< total-weight (get-distance weights neighbour)))
+      (iter-dijkstra-weighted (set-distance weights neighbour total-weight)
+                     grid
+                     (cons neighbour pending))
+      (iter-dijkstra-weighted weights grid pending))))
 
 ;; TODO: validate start is within bounds of grid
 ;; TODO: check that start is unmasked
-(defn dijkstra
-  "Determine the distance of every cell in `grid` from `start`"
+(defmethod dijkstra :unweighted
   [grid start]
   {:pre [(s/valid? ::spec/grid? grid)
          (s/valid? ::spec/coords start)]
    :post [(s/valid? ::spec/distances? %)]}
   (-> (init-distances grid)
-      (iter-dijkstra grid (grid/get-cell grid start))))
+      (iter-dijkstra-unweighted grid (grid/get-cell grid start))))
+
+(defmethod dijkstra :weighted
+  [grid start]
+  {:pre [(s/valid? ::spec/grid? grid)
+         (s/valid? ::spec/coords start)]
+   :post [(s/valid? ::spec/distances? %)]}
+  (-> (init-distances grid start)
+      (iter-dijkstra-weighted grid (list (grid/get-cell grid start)))))
 
 (defn find-closer-neighbour
   "Find the first of `cells` with a distance less than `distance`"
@@ -67,7 +113,9 @@
          (s/valid? ::spec/cell-list? cells)
          (s/valid? ::spec/distance? distance)]
    :post [(s/valid? ::spec/cell? %)]}
-  (first (filter #(< (get-distance distances %) distance) cells)))
+  (first (filter #(or (nil? (get-distance distances %))
+                      (< (get-distance distances %) distance))
+                 cells)))
 
 (defn shortest-path
   "Find the shortest path in `maze` from `start` to `goal`"
@@ -80,7 +128,7 @@
    :post [(s/valid? ::spec/distances? %)]}
   (let [distances-to-goal (dijkstra maze goal)
         distances-from-start (dijkstra maze start)
-        path (-> (init-distances maze) (set-distance (grid/get-cell maze start) 0))]
+        path (-> (init-distances maze start) (set-distance (grid/get-cell maze start) 0))]
     (letfn [(build-path [path curr]
               (if (= (cell/coords curr) goal)
                 path
@@ -96,7 +144,7 @@
   [distances]
   {:pre [(s/valid? ::spec/distances? distances)]
    :post [(s/valid? ::spec/coords %)]}
-  (key (apply max-key val distances)))
+  (key (apply max-key val (into {} (filter (comp some? val) distances)))))
 
 (defn longest-path
   "Find the longest path within `maze`"

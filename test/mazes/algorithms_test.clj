@@ -11,6 +11,7 @@
     (binding [gen/*rnd* (java.util.Random. 5)]
       (is (= (binary-tree (grid/new-grid 2 2))
              {:type :cartesian
+              :weighting :unweighted
               :rows 2
               :cols 2
               :cells {[0 0] {:links {:east '([1 0])}}
@@ -23,6 +24,7 @@
     (binding [gen/*rnd* (java.util.Random. 5)]
       (is (= (binary-tree (masked/new-grid "test/mazes/test-mask.txt"))
              {:type :cartesian
+              :weighting :unweighted
               :rows 3
               :cols 5
               :cells {[2 2] {:links {:west '([1 2]), :east '([3 2])}}
@@ -61,6 +63,7 @@
     (binding [gen/*rnd* (java.util.Random. 5)]
       (is (= (sidewinder (grid/new-grid 2 2))
              {:type :cartesian
+              :weighting :unweighted
               :rows 2
               :cols 2
               :cells {[0 0] {:links {:north '([0 1])}}
@@ -73,6 +76,7 @@
     (binding [gen/*rnd* (java.util.Random. 5)]
       (is (= (aldous-broder (grid/new-grid 3 3))
              {:type :cartesian
+              :weighting :unweighted
               :rows 3
               :cols 3
               :cells {[2 2] {:links {:west '([1 2])}}
@@ -90,6 +94,7 @@
     (binding [gen/*rnd* (java.util.Random. 5)]
       (is (= (wilson (grid/new-grid 3 3))
              {:type :cartesian
+              :weighting :unweighted
               :rows 3
               :cols 3
               :cells {[2 2] {:links {:south '([2 1])}}
@@ -107,6 +112,7 @@
     (binding [gen/*rnd* (java.util.Random. 5)]
       (is (= (hunt-and-kill (grid/new-grid 3 3))
              {:type :cartesian
+              :weighting :unweighted
               :rows 3
               :cols 3
               :cells {[2 2] {:links {:south '([2 1]) :west '([1 2])}}
@@ -124,6 +130,7 @@
     (binding [gen/*rnd* (java.util.Random. 5)]
       (is (= (recursive-backtracker (grid/new-grid 3 3))
              {:type :cartesian
+              :weighting :unweighted
               :rows 3
               :cols 3
               :cells {[2 2] {:links {:south '([2 1]), :west '([1 2])}}

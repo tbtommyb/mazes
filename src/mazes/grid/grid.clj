@@ -16,7 +16,6 @@
 (def cartesian-dirs #{:north :south :east :west})
 
 (defn has-mask? [grid & args] (if (:mask grid) :masked :unmasked))
-(defn has-weighting? [grid & args] (if (:weighting grid) :weighted :unweighted))
 (defmulti size has-mask?)
 (defmulti get-cell has-mask?)
 (defmulti get-neighbouring-cells (fn [grid & args] (:type grid)))
@@ -185,6 +184,7 @@
          (s/valid? ::spec/cols cols)]
    :post [(s/valid? ::spec/grid? %)]}
   {:type :cartesian
+   :weighting :unweighted
    :rows rows
    :cols cols
    :cells (init-cells rows cols)})

@@ -49,7 +49,7 @@
   (if (nil? distances)
     " "
     (let [distance (dist/get-distance distances cell)]
-      (if (< distance Integer/MAX_VALUE)
+      (if (not (nil? distance))
         (Integer/toString distance 36)
         " "))))
 
@@ -73,14 +73,18 @@
   [distances cell]
   {:pre [(s/valid? (s/nilable ::spec/distances?) distances)
          (s/valid? ::spec/cell? cell)]}
-  (if (nil? distances)
-    :none
-    (let [distance (dist/get-distance distances cell)
-          furthest (apply max (remove #{Integer/MAX_VALUE} (vals distances)))
-          intensity (/ (float (- furthest distance)) furthest)
-          dark (unchecked-int (* 255 intensity))
-          bright (unchecked-int (+ (* 127 intensity) 128))]
-      (format "rgb(%d,%d,%d)" dark bright dark))))
+  (if (and (not (nil? (:weight cell)))
+           (> (:weight cell) 1))
+    "rgb(255,0,0)"
+    (if (or (nil? distances)
+            (nil? (dist/get-distance distances cell)))
+      :none
+      (let [distance (dist/get-distance distances cell)
+            furthest (apply max (remove nil? (vals distances)))
+            intensity (/ (float (- furthest distance)) furthest)
+            dark (unchecked-int (* 255 intensity))
+            bright (unchecked-int (+ (* 127 intensity) 128))]
+        (format "rgb(%d,%d,%d)" dark bright dark)))))
 
 (defn svg-cell
   "Generate an SVG representation of a single `cell` in grid of `grid-height` coloured using `distances`"

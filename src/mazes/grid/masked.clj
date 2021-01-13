@@ -35,6 +35,7 @@
         char-at (fn [[x y]] (get (get data (- rows (inc y))) x))
         mask (init-mask (grid/generate-coords rows cols) char-at)]
     {:type :cartesian
+     :weighting :unweighted
      :rows rows
      :cols cols
      :cells cells

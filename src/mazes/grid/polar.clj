@@ -100,5 +100,6 @@
   "Create a polar grid with `rows` rows"
   [rows]
   {:type :polar
+   :weighting :unweighted
    :rows rows
    :cells (init-cells rows)})
