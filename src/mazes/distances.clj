@@ -90,9 +90,7 @@
   [maze start goal]
   {:pre [(s/valid? ::spec/grid? maze)
          (s/valid? ::spec/coords start)
-         (s/valid? ::spec/coords goal)
-         (s/valid? ::spec/bounded-coord? [maze goal])
-         (s/valid? ::spec/bounded-coord? [maze start])]
+         (s/valid? ::spec/coords goal)]
    :post [(s/valid? ::spec/distances? %)]}
   (let [distances-to-goal (dijkstra maze goal)
         distances-from-start (dijkstra maze start)

@@ -200,7 +200,7 @@
        [:path {:fill colour :stroke :none}
         :M [ax ay]
         :L [bx by]
-        :A [inner-radius inner-radius] theta-ccw false true [dx dy]
+        :A [outer-radius outer-radius] theta-ccw false true [dx dy]
         :L [cx cy]
         :A [inner-radius inner-radius] theta-ccw false false [ax ay]
         :z]
