@@ -86,6 +86,11 @@ mazes.core> (pr/png-out maze "polar-maze-distances.png" {:distances distances})
 
 ![Polar coloured](https://github.com/tbtommyb/mazes/blob/master/images/readme-polar-maze-distances.png?raw=true)
 
+## TODOs
+
+- [ ] Weaving
+- [ ] Braiding breaks longest path
+
 ## License
 
 Copyright © 2020 Tom Johnson
