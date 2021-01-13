@@ -119,10 +119,11 @@
      [x1 y2] [cell-size cell-size]]))
 
 (defmethod to-svg :cartesian
-  [grid distances]
+  [grid & [opt]]
   {:pre [(s/valid? ::spec/grid? grid)
-         (s/valid? (s/nilable ::spec/distances?) distances)]}
-  (let [width (* (:cols grid) cell-size)
+         (s/valid? (s/nilable ::spec/distances?) (:distances opt))]}
+  (let [distances (:distances opt)
+        width (* (:cols grid) cell-size)
         height (* (:rows grid) cell-size)]
     [:dali/page {:width width :height height}
      [:rect {:fill :white} [0 0] [width height]]
@@ -130,14 +131,12 @@
      (map (partial svg-cell grid height distances) (grid/iter-grid grid))]))
 
 (defn png-out
-  [grid filename & [opt]]
-  (let [distances (:distances opt)]
-    (io/render-png (to-svg grid distances) filename)))
+  [grid filename & opt]
+  (io/render-png (to-svg grid opt) filename))
 
 (defn svg-out
-  [grid filename & [opt]]
-  (let [distances (:distances opt)]
-    (io/render-svg (to-svg grid distances) filename)))
+  [grid filename & opt]
+  (io/render-svg (to-svg grid opt) filename))
 
 (defn svg-polar-cell
   [grid distances center theta inner-radius outer-radius idx cell]
@@ -177,10 +176,11 @@
              row))))
 
 (defmethod to-svg :polar
-  [grid distances]
+  [grid & [opt]]
   {:pre [(s/valid? ::spec/grid? grid)
-         (s/valid? (s/nilable ::spec/distances?) distances)]}
-  (let [image-size (* 2 cell-size (:rows grid))]
+         (s/valid? (s/nilable ::spec/distances?) (:distances opt))]}
+  (let [distances (:distances opt)
+        image-size (* 2 cell-size (:rows grid))]
     [:dali/page {:width (inc image-size) :height (inc image-size)}
      [:rect {:fill :white} [0 0] [(inc image-size) (inc image-size)]]
      (apply concat (map-indexed (partial svg-polar-row grid distances (/ image-size 2)) (grid/iter-rows grid)))
