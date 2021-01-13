@@ -68,6 +68,18 @@
 ;; images
 (def cell-size 50)
 
+(defn cell-coordinate-with-inset
+  [x y cell-size inset]
+  (let [x1 x
+        x4 (+ x cell-size)
+        x2 (+ x1 inset)
+        x3 (- x4 inset)
+        y1 y
+        y4 (+ y cell-size)
+        y2 (+ y1 inset)
+        y3 (- y4 inset)]
+    [x1 x2 x3 x4 y1 y2 y3 y4]))
+
 (defn background-colour-for
   "Select the background colour for `cell` based on `distances` or default white"
   [distances cell]
@@ -96,14 +108,41 @@
         link? (fn [dir] (not-empty (grid/get-linked-cells grid cell (list dir))))
         x1 (* cell-size x)
         y1 (- grid-height (* cell-size y))
-        x2 (* cell-size (+ 1 x))
-        y2 (- grid-height (* cell-size (+ 1 y)))
+        x2 (* cell-size (inc x))
+        y2 (- grid-height (* cell-size (inc y)))
         colour (background-colour-for distances cell)]
     [:dali/page
      [:line {:stroke (if (link? :north) colour :black)} [x1 y2] [x2 y2]]
      [:line {:stroke (if (link? :east) colour :black)} [x2 y1] [x2 y2]]
      [:line {:stroke (if (link? :south) colour :black)} [x1 y1] [x2 y1]]
      [:line {:stroke (if (link? :west) colour :black)} [x1 y1] [x1 y2]]]))
+
+(defn svg-cell-inset
+  "Generate an SVG representation of a single `cell` in grid of `grid-height` coloured using `distances`"
+  [inset grid grid-height distances cell]
+  {:pre [(s/valid? pos-int? grid-height)
+         (s/valid? (s/nilable ::spec/distances?) distances)
+         (s/valid? ::spec/cell? cell)]}
+  (let [[x y] (map (partial * cell-size) (cell/coords cell))
+        link? (fn [dir] (not-empty (grid/get-linked-cells grid cell (list dir))))
+        [x1 x2 x3 x4 y1 y2 y3 y4] (cell-coordinate-with-inset x
+                                                              (- (- grid-height y) cell-size)
+                                                              cell-size
+                                                              inset)
+        colour (background-colour-for distances cell)]
+    [:dali/page
+     (if (link? :north)
+       [:path {:stroke :black} :M [x2 y1] :L [x2 y2] :M [x3 y1] :L [x3 y2]]
+       [:line {:stroke :black} [x2 y2] [x3 y2]])
+     (if (link? :south)
+       [:path {:stroke :black} :M [x2 y3] :L [x2 y4] :M [x3 y3] :L [x3 y4]]
+       [:line {:stroke :black} [x2 y3] [x3 y3]])
+     (if (link? :west)
+       [:path {:stroke :black} :M [x1 y2] :L [x2 y2] :M [x1 y3] :L [x2 y3]]
+       [:line {:stroke :black} [x2 y2] [x2 y3]])
+     (if (link? :east)
+       [:path {:stroke :black} :M [x3 y2] :L [x4 y2] :M [x3 y3] :L [x4 y3]]
+       [:line {:stroke :black} [x3 y2] [x3 y3]])]))
 
 (defn svg-cell-background
   "Generate an SVG representation of a single `cell` background in grid of `grid-height` coloured using `distancess`"
@@ -113,7 +152,7 @@
          (s/valid? ::spec/cell? cell)]}
   (let [[x y] (cell/coords cell)
         x1 (* cell-size x)
-        y2 (- grid-height (* cell-size (+ 1 y)))
+        y2 (- grid-height (* cell-size (inc y)))
         colour (background-colour-for distances cell)]
     [:rect {:stroke colour :fill colour}
      [x1 y2] [cell-size cell-size]]))
@@ -123,19 +162,21 @@
   {:pre [(s/valid? ::spec/grid? grid)
          (s/valid? (s/nilable ::spec/distances?) (:distances opt))]}
   (let [distances (:distances opt)
+        inset (* cell-size (:inset opt 0))
         width (* (:cols grid) cell-size)
-        height (* (:rows grid) cell-size)]
+        height (* (:rows grid) cell-size)
+        cell-renderer (if (= 0 inset) svg-cell (partial svg-cell-inset inset))]
     [:dali/page {:width width :height height}
      [:rect {:fill :white} [0 0] [width height]]
      (map (partial svg-cell-background height distances) (grid/iter-grid grid))
-     (map (partial svg-cell grid height distances) (grid/iter-grid grid))]))
+     (map (partial cell-renderer grid height distances) (grid/iter-grid grid))]))
 
 (defn png-out
-  [grid filename & opt]
+  [grid filename & [opt]]
   (io/render-png (to-svg grid opt) filename))
 
 (defn svg-out
-  [grid filename & opt]
+  [grid filename & [opt]]
   (io/render-svg (to-svg grid opt) filename))
 
 (defn svg-polar-cell
