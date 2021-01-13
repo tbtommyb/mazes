@@ -31,68 +31,48 @@
   (-> (reduce #(set-distance %1 %2 nil) {} (grid/iter-grid grid))
       (assoc start-coord 0)))
 
-(defn iter-dijkstra-unweighted
-  "Determine the distance of every cell in `grid` from `start`"
-  [distances grid frontier]
-  {:pre [(s/valid? ::spec/distances? distances)
-         (s/valid? ::spec/grid? grid)
-         (s/valid? ::spec/cell-list? frontier)]
-   :post [(s/valid? ::spec/distances? %)]}
-  (letfn [(update-dist [distances cell distance]
-            (if (or (nil? (get-distance distances cell))
-                    (< distance (get-distance distances cell)))
-              (iter-helper
-               (set-distance distances cell distance)
-               (grid/get-linked-cells grid cell)
-               (inc distance))
-              distances))
-          (iter-helper [distances cells distance]
-            (reduce #(update-dist %1 %2 distance) distances cells))]
-    (iter-helper distances frontier 1)))
-
 (defmethod dijkstra :unweighted
   [grid start]
   {:pre [(s/valid? ::spec/grid? grid)
          (s/valid? ::spec/coords start)]
    :post [(s/valid? ::spec/distances? %)]}
-  (let [cell (grid/get-cell grid start)]
-        (-> (init-distances grid start)
-            (iter-dijkstra-unweighted grid (grid/get-linked-cells grid cell)))))
-
-(declare process-neighbour)
-
-(defn iter-dijkstra-weighted
-  "Determine the distance of every cell in `grid` from `start`"
-  [weights grid pending]
-  {:pre [(s/valid? ::spec/distances? weights)
-         (s/valid? ::spec/grid? grid)
-         (s/valid? ::spec/cell-list? pending)]
-   :post [(s/valid? ::spec/distances? %)]}
-  (if (empty? pending)
-    weights
-    (let [sorted-pending (sort-by :weight pending)
-          cell (first sorted-pending)]
-      (reduce (partial process-neighbour grid cell (rest sorted-pending))
-              weights
-              (grid/get-linked-cells grid cell)))))
-
-(defn process-neighbour
-  [grid cell pending weights neighbour]
-  (let [total-weight (+ (get-distance weights cell) (:weight neighbour))]
-    (if (or (nil? (get-distance weights neighbour))
-            (< total-weight (get-distance weights neighbour)))
-      (iter-dijkstra-weighted (set-distance weights neighbour total-weight)
-                     grid
-                     (cons neighbour pending))
-      (iter-dijkstra-weighted weights grid pending))))
+  (letfn [(process-neighbour [distance distances neighbour]
+            (if (or (nil? (get-distance distances neighbour))
+                    (< distance (get-distance distances neighbour)))
+              (helper
+               (set-distance distances neighbour distance)
+               (grid/get-linked-cells grid neighbour)
+               (inc distance))
+              distances))
+          (helper [distances frontier distance]
+            (reduce (partial process-neighbour distance) distances frontier))]
+    (let [start-cell (grid/get-cell grid start)]
+      (-> (init-distances grid start)
+          (helper (grid/get-linked-cells grid start-cell) 1)))))
 
 (defmethod dijkstra :weighted
   [grid start]
   {:pre [(s/valid? ::spec/grid? grid)
          (s/valid? ::spec/coords start)]
    :post [(s/valid? ::spec/distances? %)]}
-  (-> (init-distances grid start)
-      (iter-dijkstra-weighted grid (list (grid/get-cell grid start)))))
+  (letfn [(process-neighbour [cell pending weights neighbour]
+            (let [total-weight (+ (get-distance weights cell) (:weight neighbour))
+                  current-neighbour-weight (get-distance weights neighbour)]
+              (if (or (nil? current-neighbour-weight)
+                      (< total-weight current-neighbour-weight))
+                (helper (set-distance weights neighbour total-weight)
+                        (cons neighbour pending))
+                (helper weights pending))))
+          (helper [weights pending]
+            (if (empty? pending)
+              weights
+              (let [sorted-pending (sort-by :weight pending)
+                    cell (first sorted-pending)]
+                (reduce (partial process-neighbour cell (rest sorted-pending))
+                        weights
+                        (grid/get-linked-cells grid cell)))))]
+    (-> (init-distances grid start)
+        (helper (list (grid/get-cell grid start))))))
 
 (defn find-closer-neighbour
   "Find the first of `cells` with a distance less than `distance`"
