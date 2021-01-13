@@ -88,3 +88,31 @@
                 [2 1] 5
                 [1 2] 3
                 [0 1] 1}))))))
+
+(deftest modified-path-test
+  (testing "Adding a high weight node on the path changes the shortest path"
+    (binding [gen/*rnd* (java.util.Random. 4)]
+      (let [square (-> (weighted/new-grid 3 3)
+                      (algo/recursive-backtracker)
+                      (grid/braid))
+            with-lava (assoc-in square [:cells [2 0] :weight] 50)]
+        (is (= (dist/shortest-path square [0 0] [2 2])
+               {[2 2] 4,
+                [0 0] 0,
+                [1 0] 1,
+                [1 1] nil,
+                [0 2] nil,
+                [2 0] 2,
+                [2 1] 3,
+                [1 2] nil,
+                [0 1] nil}))
+        (is (= (dist/shortest-path with-lava [0 0] [2 2])
+               {[2 2] 4,
+                [0 0] 0,
+                [1 0] nil,
+                [1 1] nil,
+                [0 2] 2,
+                [2 0] nil,
+                [2 1] nil,
+                [1 2] 3,
+                [0 1] 1}))))))
