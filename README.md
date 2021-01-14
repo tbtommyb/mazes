@@ -88,7 +88,7 @@ mazes.core> (pr/png-out maze "polar-maze-distances.png" {:distances distances})
 
 ## TODOs
 
-- [ ] Weaving
+- [x] Weaving
 - [ ] Braiding breaks longest path
 
 ## License
