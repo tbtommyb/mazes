@@ -157,3 +157,52 @@
                (conj visited unvisited-neighbour))
         (recur maze (rest visited)))
       maze)))
+
+(defn get-set-for-cell
+  [state coord]
+  {:pre [(s/valid? ::spec/coords coord)]}
+  (get-in state [:set-for-cell coord]))
+
+(defn can-merge?
+  [state left right]
+  {:pre [(s/valid? ::spec/coords left)
+         (s/valid? ::spec/coords right)]}
+  (not= (get-set-for-cell state left) (get-set-for-cell state right)))
+
+(defn kruskal-merge
+  [state left right]
+  {:pre [(s/valid? ::spec/coords left)
+         (s/valid? ::spec/coords right)]}
+  (let [winner (get-set-for-cell state left)
+        loser (get-set-for-cell state right)
+        losers (or (get-in state [:cells-in-set loser]) (list right))]
+    (-> (reduce (fn [curr-state cell]
+                  (-> (update-in curr-state [:cells-in-set winner] #(cons cell %))
+                      (assoc-in [:set-for-cell cell] winner))) state losers)
+        (update :cells-in-set #(dissoc % loser)))))
+
+(defn kruskal-state
+  [grid]
+  (let [initial {:neighbours '() :set-for-cell {} :cells-in-set {}}
+        add-neighbour (fn [state cell dir]
+                        (if-let [neighbour (gr/get-neighbour-at grid cell dir)]
+                          (update state :neighbours #(cons (list (cell/coords cell) (cell/coords neighbour)) %))
+                          state))]
+    (reduce (fn [state cell]
+              (let [set-length (count (:set-for-cell state))]
+                (-> state
+                 (assoc-in [:set-for-cell (cell/coords cell)] set-length)
+                 (assoc-in [:cells-in-set set-length] (list (cell/coords cell)))
+                 (add-neighbour cell :south)
+                 (add-neighbour cell :east))))
+            initial
+            (gr/iter-grid grid))))
+
+(defn randomised-kruskal
+  [grid]
+  (let [state (kruskal-state grid)]
+    (first (reduce (fn [[maze curr-state] [left right]]
+                     (if (can-merge? curr-state left right)
+                       [(gr/link-cells maze (gr/get-cell maze left) (gr/get-cell maze right))
+                        (kruskal-merge curr-state left right)]
+                       [maze curr-state])) [grid state] (shuffle (:neighbours state))))))
