@@ -6,24 +6,25 @@
    [mazes.grid.masked :as masked]
    [mazes.grid.polar :as polar]
    [mazes.grid.weighted :as weighted]
+   [mazes.grid.weave :as weave]
    [mazes.printer :as pr]
    [mazes.distances :as dist]
    [mazes.algorithms :as algo]
    [mazes.utils :as utils]))
 
-;; (def maze (algo/recursive-backtracker (polar/new-grid 10)))
-;; (def distances (dist/dijkstra maze [5 8]))
-;; (pr/png-out maze "images/polar-maze-distances.png" {:distances distances})
-;; (pr/png-out maze "images/polar-maze.png")
+;; (def maze (-> (weave/new-grid 30 30)
+;;               (algo/recursive-backtracker)))
+;; (pr/png-out maze "images/1-weave.png" {:inset 0.1})
 
-(binding [gen/*rnd* (java.util.Random. 4)]
-  (def square (-> (weighted/new-grid 3 3)
-                  (algo/recursive-backtracker)
-                  (grid/braid)))
-  (def with-lava (assoc-in square [:cells [2 0] :weight] 50))
-  (prn (dist/shortest-path square [0 0] [2 2]))
-  (prn (dist/shortest-path with-lava [0 0] [2 2])))
+;; (def square (-> (grid/new-grid 30 30)
+;;               (algo/recursive-backtracker)))
+;; (pr/png-out square "images/1-grid.png" {:inset 0.1})
 
+;; (def polar (-> (polar/new-grid 10)
+;;               (algo/recursive-backtracker)))
+;; (pr/png-out polar "images/1-polar.png")
+;; (pr/png-out square "images/weave-none.png")
+;; (pr/png-out square "images/weave.png" {:inset 0.1})
 ;; (def masked (algo/hunt-and-kill (masked/new-grid "mask.txt")))
 ;; (def masked-distances (dist/dijkstra masked [3 3]))
 ;; (pr/png-out masked "images/masked-maze-distances.png" {:distances masked-distances})

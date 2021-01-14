@@ -60,3 +60,13 @@
   {:pre [(s/valid? ::spec/cell? cell)
          (s/valid? ::spec/cell? target)]}
   (some #{(coords target)} (links cell)))
+
+(defn vertical-passage?
+  [cell]
+  (or (links-at cell :north-north)
+      (links-at cell :south-south)))
+
+(defn horizontal-passage?
+  [cell]
+  (or (links-at cell :east-east)
+      (links-at cell :west-west)))

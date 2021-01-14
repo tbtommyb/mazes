@@ -4,12 +4,17 @@
 
 (def cartesian-dirs #{:north :south :east :west})
 (def polar-dirs #{:outward :inward :cw :ccw})
+(def weave-dirs #{:north :north-north
+                  :south :south-south
+                  :east :east-east
+                  :west :west-west})
 
 (s/def ::coords (s/and #(= 2 (count %))
                        #(every? int? %)))
 (s/def ::coord-list (s/coll-of ::coords))
 (s/def ::cartesian-direction? #(contains? cartesian-dirs %))
 (s/def ::polar-direction? #(contains? polar-dirs %))
+(s/def ::weave-direction? #(contains? weave-dirs %))
 (s/def ::rows pos-int?)
 (s/def ::cols pos-int?)
 (s/def ::cells map?)

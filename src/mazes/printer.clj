@@ -125,23 +125,32 @@
          (s/valid? ::spec/cell? cell)]}
   (let [[x y] (map (partial * cell-size) (cell/coords cell))
         link? (fn [dir] (not-empty (grid/get-linked-cells grid cell (list dir))))
-        [x1 x2 x3 x4 y1 y2 y3 y4] (cell-coordinate-with-inset x
-                                                              (- (- grid-height y) cell-size)
-                                                              cell-size
-                                                              inset)
+        [x1 x2 x3 x4 y1 y2 y3 y4] (cell-coordinate-with-inset
+                                   x
+                                   (- (- grid-height y) cell-size)
+                                   cell-size
+                                   inset)
         colour (background-colour-for distances cell)]
     [:dali/page
-     (if (link? :north)
-       [:path {:stroke :black} :M [x2 y1] :L [x2 y2] :M [x3 y1] :L [x3 y2]]
+     (if (or (link? :north-north) (link? :north))
+       (if (link? :north-north)
+         [:path {:stroke :black} :M [x2 (- y1 inset)] :L [x2 y2] :M [x3 (- y1 inset)] :L [x3 y2]]
+         [:path {:stroke :black} :M [x2 y1] :L [x2 y2] :M [x3 y1] :L [x3 y2]])
        [:line {:stroke :black} [x2 y2] [x3 y2]])
-     (if (link? :south)
-       [:path {:stroke :black} :M [x2 y3] :L [x2 y4] :M [x3 y3] :L [x3 y4]]
+     (if (or (link? :south-south) (link? :south))
+       (if (link? :south-south)
+         [:path {:stroke :black} :M [x2 y3] :L [x2 (+ inset y4)] :M [x3 y3] :L [x3 (+ inset y4)]]
+         [:path {:stroke :black} :M [x2 y3] :L [x2 y4] :M [x3 y3] :L [x3 y4]])
        [:line {:stroke :black} [x2 y3] [x3 y3]])
-     (if (link? :west)
-       [:path {:stroke :black} :M [x1 y2] :L [x2 y2] :M [x1 y3] :L [x2 y3]]
+     (if (or (link? :west-west) (link? :west))
+       (if (link? :west-west)
+         [:path {:stroke :black} :M [(- x1 inset) y2] :L [x2 y2] :M [(- x1 inset) y3] :L [x2 y3]]
+         [:path {:stroke :black} :M [x1 y2] :L [x2 y2] :M [x1 y3] :L [x2 y3]])
        [:line {:stroke :black} [x2 y2] [x2 y3]])
-     (if (link? :east)
-       [:path {:stroke :black} :M [x3 y2] :L [x4 y2] :M [x3 y3] :L [x4 y3]]
+     (if (or (link? :east-east) (link? :east))
+       (if (link? :east-east)
+         [:path {:stroke :black} :M [x3 y2] :L [(+ x4 inset) y2] :M [x3 y3] :L [(+ x4 inset) y3]]
+         [:path {:stroke :black} :M [x3 y2] :L [x4 y2] :M [x3 y3] :L [x4 y3]])
        [:line {:stroke :black} [x3 y2] [x3 y3]])]))
 
 (defn svg-cell-background

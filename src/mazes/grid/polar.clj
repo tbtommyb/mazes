@@ -41,7 +41,7 @@
         (populate-rows row-height row-count))))
 
 ;; TODO refactor
-(defmethod grid/direction-between-cells :polar
+(defmethod grid/direction-between-cells [:polar nil]
   [grid from to]
   {:pre [(s/valid? ::spec/cell? from)
          (s/valid? ::spec/cell? to)]}
@@ -88,11 +88,11 @@
     :post [(s/valid? ::spec/cell-list? %)]}
    (mapcat #(remove nil? (get-neighbours-at grid cell %)) dirs))
 
-(defmethod grid/get-neighbouring-cells :polar
+(defmethod grid/get-neighbouring-cells [:polar nil]
   ([grid cell] (get-neighbours-helper grid cell '(:cw :ccw :inner :outer)))
   ([grid cell dirs] (get-neighbours-helper grid cell dirs)))
 
-(defmethod grid/get-linked-cells :polar
+(defmethod grid/get-linked-cells [:polar nil]
   ([grid cell] (grid/get-linked-cells-helper grid cell polar-dirs))
   ([grid cell dirs] (grid/get-linked-cells-helper grid cell dirs)))
 

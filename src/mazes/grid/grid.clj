@@ -18,12 +18,12 @@
 (defn has-mask? [grid & args] (if (:mask grid) :masked :unmasked))
 (defmulti size has-mask?)
 (defmulti get-cell has-mask?)
-(defmulti get-neighbouring-cells (fn [grid & args] (:type grid)))
-(defmulti direction-between-cells (fn [grid & args] (:type grid)))
-(defmulti get-linked-cells (fn [grid & args] (:type grid)))
+(defmulti get-neighbouring-cells (fn [grid & args] [(:type grid) (:weave grid)]))
+(defmulti direction-between-cells (fn [grid & args] [(:type grid) (:weave grid)]))
+(defmulti get-linked-cells (fn [grid & args] [(:type grid) (:weave grid)]))
 
 ;; move to cell?
-(defmethod direction-between-cells :cartesian
+(defmethod direction-between-cells [:cartesian nil]
   [grid from to]
   {:pre [(s/valid? ::spec/cell? from)
          (s/valid? ::spec/cell? to)]
@@ -43,7 +43,7 @@
         coord (vector (+ dx (cell/get-x src)) (+ dy (cell/get-y src)))]
     (get-cell grid coord)))
 
-(defmethod get-neighbouring-cells :cartesian
+(defmethod get-neighbouring-cells [:cartesian nil]
   ([grid cell] (get-neighbouring-cells grid cell '(:north :south :east :west)))
   ([grid cell dirs]
    {:pre [(s/valid? ::spec/grid? grid)
@@ -124,7 +124,7 @@
     :post [(s/valid? ::spec/cell-list? %)]}
    (mapcat (fn [dir] (map (partial get-cell grid) (cell/links-at cell dir))) dirs)))
 
-(defmethod get-linked-cells :cartesian
+(defmethod get-linked-cells [:cartesian nil]
   ([grid cell] (get-linked-cells-helper grid cell cartesian-dirs))
   ([grid cell dirs] (get-linked-cells-helper grid cell dirs)))
 
