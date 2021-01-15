@@ -175,8 +175,6 @@
   [state left right]
   {:pre [(s/valid? ::spec/coords left)
          (s/valid? ::spec/coords right)]}
-  (if (not (can-merge? state left right))
-    state
   (let [winning-set (get-set-for-cell state left)
         losing-set (get-set-for-cell state right)
         losing-cells (or (get-in state [:cells-in-set losing-set]) (list right))]
@@ -184,11 +182,10 @@
                   (-> (update-in curr-state [:cells-in-set winning-set] #(cons loser %))
                       (assoc-in [:set-for-cell loser] winning-set)))
                 state losing-cells)
-        (update :cells-in-set #(dissoc % losing-set))))))
+        (update :cells-in-set #(dissoc % losing-set)))))
 
 ;; TODO: woah there, horsey. Let's tidy this up
 ;; Refactor link-cells to take coords and fetch from grid itself
-;; Without a low p value, adds way too many crossings. Must be a bug somewhere?
 (defn kruskal-add-crossing
   [[grid state] coord]
   {:pre [(s/valid? ::spec/coords coord)]}
@@ -219,9 +216,7 @@
          (-> (update-in state [:neighbours] #(remove (partial utils/coll-contains? (cell/coords cell)) %))
              (kruskal-merge (get-neighbour :west) coord)
              (kruskal-merge coord (get-neighbour :east))
-             (kruskal-merge (get-neighbour :north) (get-neighbour :south))
-             (kruskal-merge (get-neighbour :south) (get-neighbour :north))
-             )]
+             (kruskal-merge (get-neighbour :north) (get-neighbour :south)))]
         [(as-> grid new-grid
            (gr/add-link new-grid
                         (gr/get-neighbour-at new-grid cell :east)
@@ -236,9 +231,7 @@
          (-> (update-in state [:neighbours] #(remove (partial utils/coll-contains? (cell/coords cell)) %))
              (kruskal-merge (get-neighbour :north) coord)
              (kruskal-merge coord (get-neighbour :south))
-             (kruskal-merge (get-neighbour :west) (get-neighbour :east))
-             (kruskal-merge (get-neighbour :east) (get-neighbour :west))
-             )]))))
+             (kruskal-merge (get-neighbour :west) (get-neighbour :east)))]))))
 
 (defn kruskal-state
   [grid]
