@@ -31,8 +31,8 @@
 (defn coords
   "Get coords from `cell`"
   [cell]
-  {:pre [(s/valid? ::spec/cell? cell)]
-   :post [(s/valid? ::spec/coords %)]}
+  {:pre [(s/valid? (s/nilable ::spec/cell?) cell)]
+   :post [(s/valid? (s/nilable ::spec/coords) %)]}
   (:coords cell))
 
 (defn visited?
