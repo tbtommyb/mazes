@@ -21,6 +21,7 @@
 (defmulti get-neighbouring-cells (fn [grid & args] [(:type grid) (:weave grid)]))
 (defmulti direction-between-cells (fn [grid & args] [(:type grid) (:weave grid)]))
 (defmulti get-linked-cells (fn [grid & args] [(:type grid) (:weave grid)]))
+(defmulti get-neighbour-at (fn [grid & args] [(:type grid) (:weave grid)]))
 
 ;; move to cell?
 (defmethod direction-between-cells [:cartesian nil]
@@ -32,8 +33,7 @@
         dy (- (cell/get-y to) (cell/get-y from))]
     (get step-dir-cartesian [dx dy])))
 
-(defn get-neighbour-at
-  "Find neighbour from `src` in `direction` in `grid`"
+(defmethod get-neighbour-at [:cartesian nil]
   [grid src direction]
   {:pre [(s/valid? ::spec/grid? grid)
          (s/valid? ::spec/cell? src)

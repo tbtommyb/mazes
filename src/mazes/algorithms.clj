@@ -175,26 +175,34 @@
   [state left right]
   {:pre [(s/valid? ::spec/coords left)
          (s/valid? ::spec/coords right)]}
-  (let [winner (get-set-for-cell state left)
-        loser (get-set-for-cell state right)
-        losers (or (get-in state [:cells-in-set loser]) (list right))]
-    (-> (reduce (fn [curr-state cell]
-                  (-> (update-in curr-state [:cells-in-set winner] #(cons cell %))
-                      (assoc-in [:set-for-cell cell] winner))) state losers)
-        (update :cells-in-set #(dissoc % loser)))))
+  (if (not (can-merge? state left right))
+    state
+  (let [winning-set (get-set-for-cell state left)
+        losing-set (get-set-for-cell state right)
+        losing-cells (or (get-in state [:cells-in-set losing-set]) (list right))]
+    (-> (reduce (fn [curr-state loser]
+                  (-> (update-in curr-state [:cells-in-set winning-set] #(cons loser %))
+                      (assoc-in [:set-for-cell loser] winning-set)))
+                state losing-cells)
+        (update :cells-in-set #(dissoc % losing-set))))))
 
 ;; TODO: woah there, horsey. Let's tidy this up
 ;; Refactor link-cells to take coords and fetch from grid itself
 ;; Without a low p value, adds way too many crossings. Must be a bug somewhere?
 (defn kruskal-add-crossing
-  [[grid state] coord p]
+  [[grid state] coord]
   {:pre [(s/valid? ::spec/coords coord)]}
   (let [cell (gr/get-cell grid coord)
         get-neighbour #(cell/coords (gr/get-neighbour-at grid cell %))]
-    (if (or (> (rand) p)
-            (some cell/visited? (gr/get-neighbouring-cells grid cell))
+    (if (or (not (can-merge? state coord (get-neighbour :east)))
+            (not (can-merge? state (get-neighbour :north) coord))
+            (not (can-merge? state coord (get-neighbour :south)))
+            (not (can-merge? state (get-neighbour :west) coord))
             (not (can-merge? state (get-neighbour :east) (get-neighbour :west)))
-            (not (can-merge? state (get-neighbour :north) (get-neighbour :south))))
+            (not (can-merge? state (get-neighbour :west) (get-neighbour :east)))
+            (not (can-merge? state (get-neighbour :south) (get-neighbour :north)))
+            (not (can-merge? state (get-neighbour :north) (get-neighbour :south)))
+            (cell/visited? cell))
       [grid state]
       (if (even? (gen/rand-nth '(0 1)))
         [(as-> grid new-grid
@@ -206,14 +214,14 @@
                         (gr/get-neighbour-at new-grid cell :south)
                         (gr/get-neighbour-at new-grid cell :north)
                         :north-north)
-           (gr/link-cells new-grid cell (gr/get-neighbour-at new-grid cell :east))
-           (gr/link-cells new-grid cell (gr/get-neighbour-at new-grid cell :west)))
-         (-> state
-             (update-in [:neighbours] #(remove (partial utils/coll-contains? (cell/coords cell)) %))
-             (kruskal-merge (get-neighbour :west) (cell/coords cell))
-             (kruskal-merge (cell/coords cell) (get-neighbour :east))
+           (gr/link-cells new-grid (gr/get-neighbour-at new-grid cell :west) cell)
+           (gr/link-cells new-grid cell (gr/get-neighbour-at new-grid cell :east)))
+         (-> (update-in state [:neighbours] #(remove (partial utils/coll-contains? (cell/coords cell)) %))
+             (kruskal-merge (get-neighbour :west) coord)
+             (kruskal-merge coord (get-neighbour :east))
+             (kruskal-merge (get-neighbour :north) (get-neighbour :south))
              (kruskal-merge (get-neighbour :south) (get-neighbour :north))
-             (kruskal-merge (get-neighbour :north) (get-neighbour :south)))]
+             )]
         [(as-> grid new-grid
            (gr/add-link new-grid
                         (gr/get-neighbour-at new-grid cell :east)
@@ -223,14 +231,14 @@
                         (gr/get-neighbour-at new-grid cell :west)
                         (gr/get-neighbour-at new-grid cell :east)
                         :east-east)
-           (gr/link-cells new-grid cell (gr/get-neighbour-at new-grid cell :south))
-           (gr/link-cells new-grid cell (gr/get-neighbour-at new-grid cell :north)))
-         (-> state
-             (update-in [:neighbours] #(remove (partial utils/coll-contains? (cell/coords cell)) %))
-             (kruskal-merge (get-neighbour :north) (cell/coords cell))
-             (kruskal-merge (cell/coords cell) (get-neighbour :south))
+           (gr/link-cells new-grid (gr/get-neighbour-at new-grid cell :north) cell)
+           (gr/link-cells new-grid cell (gr/get-neighbour-at new-grid cell :south)))
+         (-> (update-in state [:neighbours] #(remove (partial utils/coll-contains? (cell/coords cell)) %))
+             (kruskal-merge (get-neighbour :north) coord)
+             (kruskal-merge coord (get-neighbour :south))
+             (kruskal-merge (get-neighbour :west) (get-neighbour :east))
              (kruskal-merge (get-neighbour :east) (get-neighbour :west))
-             (kruskal-merge (get-neighbour :west) (get-neighbour :east)))]))))
+             )]))))
 
 (defn kruskal-state
   [grid]
@@ -250,21 +258,31 @@
             (gr/iter-grid grid))))
 
 (defn add-random-crossings
-  [grid state & [opt]]
-  (let [size (gr/size grid)
-        p (:p opt 1.0)]
+  [grid state]
+  (let [size (gr/size grid)]
     (loop [curr 1
            grid-state [grid state]]
       (if (= curr size)
         grid-state
-        (let [row (int (inc (rand (- (:rows grid) 2))))
-              col (int (inc (rand (- (:cols grid) 2))))]
+        (let [row (int (rand (- (:rows grid) 2)))
+              col (int (rand (- (:cols grid) 2)))]
+
           (recur (inc curr)
-                 (kruskal-add-crossing grid-state [col row] p)))))))
+                 (kruskal-add-crossing grid-state [col row])))))))
+
+(defn simple-kruskal
+  [grid]
+  (let [init-state (kruskal-state grid)]
+    (first (reduce (fn [[maze curr-state] [left right]]
+                     (if (can-merge? curr-state left right)
+                       [(gr/link-cells maze (gr/get-cell maze left) (gr/get-cell maze right))
+                        (kruskal-merge curr-state left right)]
+                       [maze curr-state])) [grid init-state] (shuffle (:neighbours init-state))))))
 
 (defn randomised-kruskal
-  [grid & [opt]]
-  (let [grid-state (add-random-crossings grid (kruskal-state grid) opt)]
+  [grid]
+  (let [init-state (kruskal-state grid)
+        grid-state (add-random-crossings grid init-state)]
     (first (reduce (fn [[maze curr-state] [left right]]
                      (if (can-merge? curr-state left right)
                        [(gr/link-cells maze (gr/get-cell maze left) (gr/get-cell maze right))

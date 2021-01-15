@@ -27,8 +27,7 @@
                   :east :east-east
                   :west :west-west})
 
-(defn get-neighbour-at
-  "Find neighbour from `src` in `direction` in `grid`"
+(defmethod grid/get-neighbour-at [:cartesian :weave]
   [grid src direction]
   {:pre [(s/valid? ::spec/grid? grid)
          (s/valid? ::spec/cell? src)
@@ -54,30 +53,30 @@
 
 (defn can-tunnel-north?
   [grid cell]
-  (let [northern (get-neighbour-at grid cell :north)]
+  (let [northern (grid/get-neighbour-at grid cell :north)]
     (and northern
-         (get-neighbour-at grid cell :north-north)
+         (grid/get-neighbour-at grid cell :north-north)
          (is-horizontal-passage? northern))))
 
 (defn can-tunnel-south?
   [grid cell]
-  (let [southern (get-neighbour-at grid cell :south)]
+  (let [southern (grid/get-neighbour-at grid cell :south)]
     (and southern
-         (get-neighbour-at grid cell :south-south)
+         (grid/get-neighbour-at grid cell :south-south)
          (is-horizontal-passage? southern))))
 
 (defn can-tunnel-east?
   [grid cell]
-  (let [eastern (get-neighbour-at grid cell :east)]
+  (let [eastern (grid/get-neighbour-at grid cell :east)]
     (and eastern
-         (get-neighbour-at grid cell :east-east)
+         (grid/get-neighbour-at grid cell :east-east)
          (is-vertical-passage? eastern))))
 
 (defn can-tunnel-west?
   [grid cell]
-  (let [western (get-neighbour-at grid cell :west)]
+  (let [western (grid/get-neighbour-at grid cell :west)]
     (and western
-         (get-neighbour-at grid cell :west-west)
+         (grid/get-neighbour-at grid cell :west-west)
          (is-vertical-passage? western))))
 
 ;; TODO both these methods are ugly
@@ -106,7 +105,7 @@
           (s/valid? ::spec/cell? cell)]
     :post [(s/valid? ::spec/cell-list? %)]}
    (let [find-neighbour (fn [dir]
-                  (let [neighbour (get-neighbour-at grid cell dir)]
+                  (let [neighbour (grid/get-neighbour-at grid cell dir)]
                     (when (and neighbour
                                (= dir (grid/direction-between-cells grid cell neighbour)))
                       neighbour)))]
