@@ -316,3 +316,24 @@
             (let [neighbour-coord (apply min-key #(get costs %) available-neighbours)]
               (recur (gr/link-cells curr-grid (gr/get-cell curr-grid coord) (gr/get-cell curr-grid neighbour-coord))
                      (cons neighbour-coord active-coords)))))))))
+
+(defn growing-tree
+  [grid f & [opt]]
+  (let [start (or (:start opt)
+                  (utils/safe-rand-nth (map cell/coords (gr/iter-grid grid))))]
+    (loop [curr-grid grid
+           active-coords (list start)]
+      (if (empty? active-coords)
+        curr-grid
+        (let [coord (f active-coords)
+              available-neighbours (->> (gr/get-neighbouring-cells curr-grid (gr/get-cell curr-grid coord))
+                                        (filter (complement cell/visited?))
+                                        (map cell/coords))
+              neighbour (utils/safe-rand-nth available-neighbours)]
+          (if (nil? neighbour)
+            (recur curr-grid (remove #{coord} active-coords))
+            (recur (gr/link-cells curr-grid (gr/get-cell curr-grid coord) (gr/get-cell curr-grid neighbour))
+                   (cons neighbour active-coords))))))))
+
+(defn ellers
+  [grid])
