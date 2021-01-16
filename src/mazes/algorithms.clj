@@ -259,7 +259,6 @@
         grid-state
         (let [row (int (rand (- (:rows grid) 2)))
               col (int (rand (- (:cols grid) 2)))]
-
           (recur (inc curr)
                  (kruskal-add-crossing grid-state [col row])))))))
 
@@ -281,3 +280,39 @@
                        [(gr/link-cells maze (gr/get-cell maze left) (gr/get-cell maze right))
                         (kruskal-merge curr-state left right)]
                        [maze curr-state])) grid-state (shuffle (:neighbours (second grid-state)))))))
+
+(defn simplified-prims
+  [grid & [opt]]
+  (let [start (or (gr/get-cell grid (:start opt))
+                  (utils/safe-rand-nth (gr/iter-grid grid)))]
+    (loop [curr-grid grid
+           active-cells (list start)]
+      (if (empty? active-cells)
+        curr-grid
+        (let [cell (utils/safe-rand-nth active-cells)
+              available-neighbours (filter (complement cell/visited?)
+                                           (gr/get-neighbouring-cells curr-grid cell))
+              neighbour (utils/safe-rand-nth available-neighbours)]
+          (if (nil? neighbour)
+            (recur curr-grid (remove #{cell} active-cells))
+            (recur (gr/link-cells curr-grid cell neighbour)
+                   (cons neighbour active-cells))))))))
+
+(defn true-prims
+  [grid & [opt]]
+  (let [start (or (:start opt)
+                  (utils/safe-rand-nth (map cell/coords (gr/iter-grid grid))))
+        costs (reduce #(assoc %1 %2 (rand 100)) {} (map cell/coords (gr/iter-grid grid)))]
+    (loop [curr-grid grid
+           active-coords (list start)]
+      (if (empty? active-coords)
+        curr-grid
+        (let [coord (apply min-key #(get costs %) active-coords)
+              available-neighbours (->> (gr/get-neighbouring-cells curr-grid (gr/get-cell curr-grid coord))
+                                        (filter (complement cell/visited?))
+                                        (map cell/coords))]
+          (if (empty? available-neighbours)
+            (recur curr-grid (remove #{coord} active-coords))
+            (let [neighbour-coord (apply min-key #(get costs %) available-neighbours)]
+              (recur (gr/link-cells curr-grid (gr/get-cell curr-grid coord) (gr/get-cell curr-grid neighbour-coord))
+                     (cons neighbour-coord active-coords)))))))))

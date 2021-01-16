@@ -36,7 +36,7 @@
 (defmethod get-neighbour-at [:cartesian nil]
   [grid src direction]
   {:pre [(s/valid? ::spec/grid? grid)
-         (s/valid? ::spec/cell? src)
+         (s/valid? (s/nilable ::spec/cell?) src)
          (s/valid? ::spec/cartesian-direction? direction)]
    :post [(s/valid? (s/nilable ::spec/cell?) %)]}
   (let [[dx dy] (get dir-step-cartesian direction)
@@ -47,7 +47,7 @@
   ([grid cell] (get-neighbouring-cells grid cell '(:north :south :east :west)))
   ([grid cell dirs]
    {:pre [(s/valid? ::spec/grid? grid)
-          (s/valid? ::spec/cell? cell)]
+          (s/valid? (s/nilable ::spec/cell?) cell)]
     :post [(s/valid? ::spec/cell-list? %)]}
    (keep #(get-neighbour-at grid cell %) dirs)))
 
@@ -75,7 +75,7 @@
 (defn get-cell-helper
   "Return the cell located in `grid` at `coord`"
   [grid coord]
-  {:pre [(s/valid? ::spec/coords coord)
+  {:pre [(s/valid? (s/nilable ::spec/coords) coord)
          (s/valid? ::spec/grid? grid)]
    :post [(s/valid? (s/nilable ::spec/cell?) %)]}
   (when-let [cell-body (get-in grid [:cells coord])]
