@@ -502,12 +502,10 @@
                         (let [coord [(+ col n) (+ row divide-south-of)]
                               cell (gr/get-cell curr-grid coord)
                               neighbour (gr/get-neighbour-at curr-grid cell :south)]
-                          (when (nil? neighbour)
-                            (prn "unlink horizontal" divide-south-of coord neighbour))
                           (gr/unlink-cells curr-grid cell neighbour))))]
     (-> (reduce unlink-cell grid (range width))
-        (divide-grid row col (dec divide-south-of) width)
-        (divide-grid (+ row (dec divide-south-of)) col (- height (dec divide-south-of)) width))))
+        (divide-grid row col divide-south-of width)
+        (divide-grid (+ row divide-south-of) col (- height divide-south-of) width))))
 
 (defn divide-grid-vertically
   [grid row col height width]
@@ -519,15 +517,13 @@
                         (let [coord [(+ col divide-east-of) (+ row n)]
                               cell (gr/get-cell curr-grid coord)
                               neighbour (gr/get-neighbour-at curr-grid cell :east)]
-                          (when (nil? neighbour)
-                            (prn "unlink vertical" divide-east-of coord neighbour))
                           (gr/unlink-cells curr-grid cell neighbour))))]
     (-> (reduce unlink-cell grid (range height))
         (divide-grid row col height (inc divide-east-of))
         (divide-grid row (+ col 1 divide-east-of) height (- width divide-east-of 1)))))
 
 (defn divide-grid
-  [grid row col height width]
+  [grid row col height width & [src]]
   (if (or (<= height 1) (<= width 1))
     grid
     (if (> height width)
