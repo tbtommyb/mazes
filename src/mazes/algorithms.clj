@@ -425,21 +425,21 @@
         [newer-state prior-set] (row-state-set-for new-state west)]
     [newer-state curr-set prior-set]))
 
-(defn link-row
+(defn link-row-horizontally
   [grid-state row]
   {:pre [(s/valid? ::spec/eller-grid-state? grid-state)
          (s/valid? ::spec/cell-list? row)]
    :post [(s/valid? ::spec/eller-grid-state? %)]}
-  (reduce (fn [[curr-grid curr-state] cell]
+  (reduce (fn [[curr-grid curr-row-state] cell]
             (if-let [west (gr/get-neighbour-at curr-grid cell :west)]
-              (let [[newer-state cell-set prior-set] (current-and-prior-set curr-state cell west)]
+              (let [[latest-row-state cell-set prior-set] (current-and-prior-set curr-row-state cell west)]
                 (if (should-link? curr-grid cell-set prior-set cell)
                   [(gr/link-cells curr-grid cell west)
-                   (row-state-merge newer-state prior-set cell-set)]
-                  [curr-grid newer-state]))
-              [curr-grid curr-state])) grid-state row))
+                   (row-state-merge latest-row-state prior-set cell-set)]
+                  [curr-grid latest-row-state]))
+              [curr-grid curr-row-state])) grid-state row))
 
-(defn link-south
+(defn make-southern-connections
   [[grid row-state next-row-state] [set-id coord-list]]
   (reduce (fn [[curr-grid curr-row-state curr-next-row-state] [idx coord]]
             (if (or (= 0 idx) (= 0 (rand-int 3)))
@@ -450,20 +450,22 @@
                  latest-row-state
                  (row-state-record curr-next-row-state cell-set southern)])
               [curr-grid curr-row-state curr-next-row-state]))
-          [grid row-state next-row-state] (map-indexed list (shuffle coord-list))))
+          [grid row-state next-row-state]
+          (map-indexed list (shuffle coord-list))))
 
-(defn link-to-southern-row
+(defn link-to-south
   [grid-state row]
   {:pre [(s/valid? ::spec/eller-grid-state? grid-state)
          (s/valid? ::spec/cell-list? row)]
    :post [(s/valid? ::spec/eller-grid-state? %)]}
-  (let [[grid curr-row-state] grid-state]
+  (let [[grid row-state] grid-state]
     ;; Check if it's the final row and do nothing if so
     (if (nil? (gr/get-neighbour-at grid (first row) :south))
-      [grid curr-row-state]
-      (let [[new-grid _ next-row-state] (reduce link-south [grid curr-row-state (row-state-next curr-row-state)]
-                                              (row-state-each-set curr-row-state))]
-        [new-grid next-row-state]))))
+      grid-state
+      (-> (reduce make-southern-connections
+                  [grid row-state (row-state-next row-state)]
+                  (row-state-each-set row-state))
+          (mapv [0 2])))))
 
 (defn process-row
   [grid-state row]
@@ -471,8 +473,8 @@
          (s/valid? ::spec/cell-list? row)]
    :post [(s/valid? ::spec/eller-grid-state? %)]}
   (-> grid-state
-      (link-row row)
-      (link-to-southern-row row)))
+      (link-row-horizontally row)
+      (link-to-south row)))
 
 (defn eller
   [grid]

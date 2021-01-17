@@ -38,6 +38,6 @@
                                        ::set-for-cell
                                        ::next-set]))
 
-(s/def ::eller-grid-state? (fn [[grid state & args]]
+(s/def ::eller-grid-state? (fn [[grid state & args]
                              (and (s/valid? ::grid? grid)
                                   (s/valid? ::eller-state? state))))
