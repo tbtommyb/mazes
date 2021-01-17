@@ -481,3 +481,62 @@
   {:pre [(s/valid? ::spec/grid? grid)]
    :post [(s/valid? ::spec/grid? %)]}
   (first (reduce process-row [grid (make-row-state) nil] (reverse (gr/iter-rows grid)))))
+
+(defn link-all-cell-neighbours
+  [grid cell]
+  (reduce #(gr/link-cells %1 cell %2 false) grid (gr/get-neighbouring-cells grid cell)))
+
+(defn link-every-cell
+  [grid]
+  (reduce link-all-cell-neighbours grid (gr/iter-grid grid)))
+
+(declare divide-grid)
+
+(defn divide-grid-horizontally
+  [grid row col height width]
+  (let [divide-south-of (utils/safe-rand-nth (range 1 height))
+        passage-at (rand-int width)
+        unlink-cell (fn [curr-grid n]
+                      (if (= passage-at n)
+                        curr-grid
+                        (let [coord [(+ col n) (+ row divide-south-of)]
+                              cell (gr/get-cell curr-grid coord)
+                              neighbour (gr/get-neighbour-at curr-grid cell :south)]
+                          (when (nil? neighbour)
+                            (prn "unlink horizontal" divide-south-of coord neighbour))
+                          (gr/unlink-cells curr-grid cell neighbour))))]
+    (-> (reduce unlink-cell grid (range width))
+        (divide-grid row col (dec divide-south-of) width)
+        (divide-grid (+ row (dec divide-south-of)) col (- height (dec divide-south-of)) width))))
+
+(defn divide-grid-vertically
+  [grid row col height width]
+  (let [divide-east-of (rand-int (dec width))
+        passage-at (rand-int height)
+        unlink-cell (fn [curr-grid n]
+                      (if (= passage-at n)
+                        curr-grid
+                        (let [coord [(+ col divide-east-of) (+ row n)]
+                              cell (gr/get-cell curr-grid coord)
+                              neighbour (gr/get-neighbour-at curr-grid cell :east)]
+                          (when (nil? neighbour)
+                            (prn "unlink vertical" divide-east-of coord neighbour))
+                          (gr/unlink-cells curr-grid cell neighbour))))]
+    (-> (reduce unlink-cell grid (range height))
+        (divide-grid row col height (inc divide-east-of))
+        (divide-grid row (+ col 1 divide-east-of) height (- width divide-east-of 1)))))
+
+(defn divide-grid
+  [grid row col height width]
+  (if (or (<= height 1) (<= width 1))
+    grid
+    (if (> height width)
+      (divide-grid-horizontally grid row col height width)
+      (divide-grid-vertically grid row col height width))))
+
+(defn recursive-division
+  [grid]
+  {:pre [(s/valid? ::spec/grid? grid)]
+   :post [(s/valid? ::spec/grid? %)]}
+  (-> (link-every-cell grid)
+      (divide-grid 0 0 (:rows grid) (:cols grid))))

@@ -112,3 +112,23 @@
              [{:coords [0 1] :links {}}
               {:coords [1 0] :links {}}]))
       (is (= (get-neighbouring-cells grid (cell/make [0 0]) '()) [])))))
+
+(deftest unlink-cells-test
+  (testing "That a cell linkage can be removed"
+    (let [maze {:type :cartesian
+                :weighting :unweighted
+                :rows 2
+                :cols 2
+                :cells {[0 0] {:links {:north '([0 1])}}
+                        [0 1] {:links {:south '([0 0])}}
+                        [1 0] {:links {}}
+                        [1 1] {:links {}}}}]
+      (is (= (unlink-cells maze (get-cell maze [0 0]) (get-cell maze [0 1]))
+             {:type :cartesian
+              :weighting :unweighted
+              :rows 2
+              :cols 2
+              :cells {[0 0] {:links {}}
+                      [0 1] {:links {}}
+                      [1 0] {:links {}}
+                      [1 1] {:links {}}}})))))

@@ -75,9 +75,9 @@
 (defn get-cell-helper
   "Return the cell located in `grid` at `coord`"
   [grid coord]
-  {:pre [(s/valid? (s/nilable ::spec/coords) coord)
-         (s/valid? ::spec/grid? grid)]
-   :post [(s/valid? (s/nilable ::spec/cell?) %)]}
+  ;; {:pre [(s/valid? (s/nilable ::spec/coords) coord)
+  ;;        (s/valid? ::spec/grid? grid)]
+  ;;  :post [(s/valid? (s/nilable ::spec/cell?) %)]}
   (when-let [cell-body (get-in grid [:cells coord])]
     (cell/make coord cell-body)))
 
@@ -92,8 +92,8 @@
 (defn iter-grid
   "Iterate through `grid` by column, returning each accessible cell"
   [grid & [opt]]
-  {:pre [(s/valid? ::spec/grid? grid)]
-   :post [(s/valid? ::spec/cell-list? %)]}
+  ;; {:pre [(s/valid? ::spec/grid? grid)]
+  ;;  :post [(s/valid? ::spec/cell-list? %)]}
   (let [getter (if (:ignore-mask opt) get-cell-helper get-cell)]
     (keep (partial getter grid)
           (sort-by (juxt first last) (keys (:cells grid))))))
@@ -131,6 +131,20 @@
 (defn add-link
   [grid src dest dir]
   (update-in grid [:cells (cell/coords src) :links dir] #(conj % (cell/coords dest))))
+
+;; TODO so gross
+(defn remove-link
+  [grid cell neighbour]
+  (-> (update-in grid [:cells (cell/coords cell) :links]
+                 #(apply hash-map (mapcat (fn [[k v]] [k (remove #{(cell/coords neighbour)} v)]) %)))
+      (update-in [:cells (cell/coords cell) :links]
+                 #(into {} (filter (fn [[k v]] (not (empty? v))) %)))))
+
+(defn unlink-cells
+  ([grid src dest] (unlink-cells grid src dest true))
+  ([grid src dest bidirectional]
+   (-> (remove-link grid src dest)
+       (remove-link dest src))))
 
 (defn link-cells
   "Record a link in `grid` from `src` to `dest` if they are neighbours. Default bidirectional"

@@ -16,7 +16,7 @@
   "Generate an ASCII representation of the upper half of `row`"
   [grid row cell-renderer]
   {:pre [(s/valid? ::spec/cell-list? row)]}
-  (let [render-cell #(if (cell/links-at % :east)
+  (let [render-cell #(if (not (empty? (cell/links-at % :east)))
                        (format " %s  " (cell-renderer %))
                        (format " %s |" (cell-renderer %)))]
     (flatten (list "|" (map render-cell row) "\n"))))
@@ -25,7 +25,7 @@
   "Generate an ASCII representation of the lower half of `row`"
   [grid row]
   {:pre [(s/valid? ::spec/cell-list? row)]}
-  (let [render-cell #(if (cell/links-at % :south) "   +" "---+")]
+  (let [render-cell #(if (not (empty? (cell/links-at % :south))) "   +" "---+")]
     (flatten (list "+" (map render-cell row) "\n"))))
 
 (defn ascii-row

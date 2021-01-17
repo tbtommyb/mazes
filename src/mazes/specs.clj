@@ -22,7 +22,7 @@
 ;; TODO tighten up definition of grid to include links
 (s/def ::grid? (s/keys :req-un [::rows ::cells]))
 (s/def ::cell? (s/keys :req-un [::coords ::links]))
-(s/def ::cell-list? (s/coll-of ::cell?))
+(s/def ::cell-list? (s/coll-of ::cell? :min-count 0))
 (s/def ::bounded-coord? (fn [[maze coord]]
                            (and (>= (first coord) 0)
                                 (>= (second coord) 0)
@@ -38,6 +38,6 @@
                                        ::set-for-cell
                                        ::next-set]))
 
-(s/def ::eller-grid-state? (fn [[grid state & args]
+(s/def ::eller-grid-state? (fn [[grid state & args]]
                              (and (s/valid? ::grid? grid)
                                   (s/valid? ::eller-state? state))))

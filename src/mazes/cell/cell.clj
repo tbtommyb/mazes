@@ -1,7 +1,6 @@
 (ns mazes.cell.cell
   (:require
    [mazes.specs :as spec]
-   [mazes.cell.cell :as cell]
    [clojure.spec.alpha :as s]))
 
 (defn make
