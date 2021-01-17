@@ -404,12 +404,12 @@
   (map identity (:cells-in-set state)))
 
 (defn should-link?
-  [left-set right-set cell]
+  [grid left-set right-set cell]
   {:pre [(s/valid? ::spec/next-set left-set)
          (s/valid? ::spec/next-set right-set)
          (s/valid? ::spec/cell? cell)]}
   (and (not= left-set right-set)
-       (or (not (nil? (cell/links-at cell :south)))
+       (or (nil? (gr/get-neighbour-at grid cell :south))
            (= (rand-int 2) 0))))
 
 ;; TODO - monads?
@@ -433,52 +433,49 @@
   (reduce (fn [[curr-grid curr-state] cell]
             (if-let [west (gr/get-neighbour-at curr-grid cell :west)]
               (let [[newer-state cell-set prior-set] (current-and-prior-set curr-state cell west)]
-                (if (should-link? cell-set prior-set cell)
+                (if (should-link? curr-grid cell-set prior-set cell)
                   [(gr/link-cells curr-grid cell west)
                    (row-state-merge newer-state prior-set cell-set)]
                   [curr-grid newer-state]))
               [curr-grid curr-state])) grid-state row))
 
 (defn link-south
-  [[grid row-state] [set-id coord-list]]
-  (prn "row-state" row-state)
-  (prn coord-list)
-  (let [next-row-state (row-state-next row-state)]
-    (reduce (fn [[curr-grid curr-row-state] [idx coord]]
-              (if (or (= 0 idx) (= 0 (rand-int 3)))
-                (let [cell (gr/get-cell curr-grid coord)
-                      southern (gr/get-neighbour-at curr-grid cell :south)
-                      [latest-row-state cell-set] (row-state-set-for curr-row-state cell)]
-                  [(gr/link-cells curr-grid cell southern)
-                   (row-state-record latest-row-state cell-set southern)])
-                [curr-grid next-row-state]))
-            [grid row-state] (map-indexed list (shuffle coord-list)))))
+  [[grid row-state next-row-state] [set-id coord-list]]
+  (reduce (fn [[curr-grid curr-row-state curr-next-row-state] [idx coord]]
+            (if (or (= 0 idx) (= 0 (rand-int 3)))
+              (let [cell (gr/get-cell curr-grid coord)
+                    southern (gr/get-neighbour-at curr-grid cell :south)
+                    [latest-row-state cell-set] (row-state-set-for curr-row-state cell)]
+                [(gr/link-cells curr-grid cell southern)
+                 latest-row-state
+                 (row-state-record curr-next-row-state cell-set southern)])
+              [curr-grid curr-row-state curr-next-row-state]))
+          [grid row-state next-row-state] (map-indexed list (shuffle coord-list))))
 
-(defn link-southern-bit
+(defn link-to-southern-row
   [grid-state row]
   {:pre [(s/valid? ::spec/eller-grid-state? grid-state)
          (s/valid? ::spec/cell-list? row)]
    :post [(s/valid? ::spec/eller-grid-state? %)]}
-  (let [[grid row-state] grid-state
-        next-row-state (row-state-next row-state)]
-    (prn "south" (gr/get-neighbour-at grid (first row) :south))
-    (if (nil? (gr/get-neighbour-at grid (first row) :south)) ;; just checking if it's the final row?
-      [grid next-row-state]
-      (reduce link-south [grid row-state] (row-state-each-set row-state)))))
+  (let [[grid curr-row-state] grid-state]
+    ;; Check if it's the final row and do nothing if so
+    (if (nil? (gr/get-neighbour-at grid (first row) :south))
+      [grid curr-row-state]
+      (let [[new-grid _ next-row-state] (reduce link-south [grid curr-row-state (row-state-next curr-row-state)]
+                                              (row-state-each-set curr-row-state))]
+        [new-grid next-row-state]))))
 
 (defn process-row
   [grid-state row]
   {:pre [(s/valid? ::spec/eller-grid-state? grid-state)
          (s/valid? ::spec/cell-list? row)]
    :post [(s/valid? ::spec/eller-grid-state? %)]}
-  (prn "process-row state" (second grid-state))
-  (prn "process-row row" row)
   (-> grid-state
       (link-row row)
-      (link-southern-bit row)))
+      (link-to-southern-row row)))
 
 (defn eller
   [grid]
   {:pre [(s/valid? ::spec/grid? grid)]
    :post [(s/valid? ::spec/grid? %)]}
-  (first (reduce process-row [grid (make-row-state)] (reverse (gr/iter-rows grid)))))
+  (first (reduce process-row [grid (make-row-state) nil] (reverse (gr/iter-rows grid)))))
