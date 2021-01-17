@@ -31,3 +31,13 @@
 (s/def ::distances? map?)
 (s/def ::distance? (s/nilable int?))
 
+(s/def ::cells-in-set map?)
+(s/def ::set-for-cell map?)
+(s/def ::next-set int?)
+(s/def ::eller-state? (s/keys :req-un [::cells-in-set
+                                       ::set-for-cell
+                                       ::next-set]))
+
+(s/def ::eller-grid-state? (fn [[grid state]]
+                             (and (s/valid? ::grid? grid)
+                                  (s/valid? ::eller-state? state))))

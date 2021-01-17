@@ -335,5 +335,150 @@
             (recur (gr/link-cells curr-grid (gr/get-cell curr-grid coord) (gr/get-cell curr-grid neighbour))
                    (cons neighbour active-coords))))))))
 
-(defn ellers
-  [grid])
+;; Eller's algorithm
+(defn make-row-state
+  ([] (make-row-state 0))
+  ([starting-set]
+   {:cells-in-set {}
+    :set-for-cell {}
+    :next-set starting-set}))
+
+(defn row-state-record
+  [state set-id cell]
+  {:pre [(s/valid? ::spec/eller-state? state)
+         (s/valid? ::spec/next-set set-id)
+         (s/valid? ::spec/cell? cell)]
+   :post [(s/valid? ::spec/eller-state? %)]}
+  (-> state
+      (assoc-in [:set-for-cell (cell/get-x cell)] set-id)
+      (update-in [:cells-in-set set-id] #(conj % (cell/coords cell)))))
+
+(defn row-state-increment-cell
+  [state cell]
+  {:pre [(s/valid? ::spec/eller-state? state)
+         (s/valid? ::spec/cell? cell)]
+   :post [(s/valid? ::spec/eller-state? %)]}
+  (-> (row-state-record state (:next-set state) cell)
+      (update :next-set inc)))
+
+(defn get-cell-set
+  [state cell]
+  {:pre [(s/valid? ::spec/eller-state? state)
+         (s/valid? ::spec/cell? cell)]
+   :post [(s/valid? (s/nilable ::spec/next-set) %)]}
+  (get-in state [:set-for-cell (cell/get-x cell)]))
+
+(defn row-state-set-for
+  [state cell]
+  {:pre [(s/valid? ::spec/eller-state? state)
+         (s/valid? ::spec/cell? cell)]
+   :post [(s/valid? ::spec/eller-state? (first %))
+          (s/valid? ::spec/next-set (second %))]}
+  (if-let [cell-set (get-cell-set state cell)]
+    [state cell-set]
+    (let [new-state (row-state-increment-cell state cell)]
+      [new-state (get-cell-set new-state cell)])))
+
+(defn row-state-merge
+  [state winner loser]
+  {:pre [(s/valid? ::spec/eller-state? state)
+         (s/valid? ::spec/next-set winner)
+         (s/valid? ::spec/next-set loser)]
+   :post [(s/valid? ::spec/eller-state? %)]}
+  (-> (reduce (fn [state coord]
+            (-> (assoc-in state [:set-for-cell (first coord)] winner)
+                (update-in [:cells-in-set winner] #(conj % coord))))
+            state
+            (get-in state [:cells-in-set loser]))
+      (update :cells-in-set #(dissoc % loser))))
+
+(defn row-state-next
+  [state]
+  {:pre [(s/valid? ::spec/eller-state? state)]
+   :post [(s/valid? ::spec/eller-state? %)]}
+  (make-row-state (:next-set state)))
+
+(defn row-state-each-set
+  [state]
+  {:pre [(s/valid? ::spec/eller-state? state)]}
+  (map identity (:cells-in-set state)))
+
+(defn should-link?
+  [left-set right-set cell]
+  {:pre [(s/valid? ::spec/next-set left-set)
+         (s/valid? ::spec/next-set right-set)
+         (s/valid? ::spec/cell? cell)]}
+  (and (not= left-set right-set)
+       (or (not (nil? (cell/links-at cell :south)))
+           (= (rand-int 2) 0))))
+
+;; TODO - monads?
+(defn current-and-prior-set
+  [state cell west]
+  {:pre [(s/valid? ::spec/eller-state? state)
+         (s/valid? ::spec/cell? cell)
+         (s/valid? ::spec/cell? west)]
+   :post [(s/valid? ::spec/eller-state? (first %))
+          (s/valid? ::spec/next-set (second %))
+          (s/valid? ::spec/next-set (nth % 2))]}
+  (let [[new-state curr-set] (row-state-set-for state cell)
+        [newer-state prior-set] (row-state-set-for new-state west)]
+    [newer-state curr-set prior-set]))
+
+(defn link-row
+  [grid-state row]
+  {:pre [(s/valid? ::spec/eller-grid-state? grid-state)
+         (s/valid? ::spec/cell-list? row)]
+   :post [(s/valid? ::spec/eller-grid-state? %)]}
+  (reduce (fn [[curr-grid curr-state] cell]
+            (if-let [west (gr/get-neighbour-at curr-grid cell :west)]
+              (let [[newer-state cell-set prior-set] (current-and-prior-set curr-state cell west)]
+                (if (should-link? cell-set prior-set cell)
+                  [(gr/link-cells curr-grid cell west)
+                   (row-state-merge newer-state prior-set cell-set)]
+                  [curr-grid newer-state]))
+              [curr-grid curr-state])) grid-state row))
+
+(defn link-south
+  [[grid row-state] [set-id coord-list]]
+  (prn "row-state" row-state)
+  (prn coord-list)
+  (let [next-row-state (row-state-next row-state)]
+    (reduce (fn [[curr-grid curr-row-state] [idx coord]]
+              (if (or (= 0 idx) (= 0 (rand-int 3)))
+                (let [cell (gr/get-cell curr-grid coord)
+                      southern (gr/get-neighbour-at curr-grid cell :south)
+                      [latest-row-state cell-set] (row-state-set-for curr-row-state cell)]
+                  [(gr/link-cells curr-grid cell southern)
+                   (row-state-record latest-row-state cell-set southern)])
+                [curr-grid next-row-state]))
+            [grid row-state] (map-indexed list (shuffle coord-list)))))
+
+(defn link-southern-bit
+  [grid-state row]
+  {:pre [(s/valid? ::spec/eller-grid-state? grid-state)
+         (s/valid? ::spec/cell-list? row)]
+   :post [(s/valid? ::spec/eller-grid-state? %)]}
+  (let [[grid row-state] grid-state
+        next-row-state (row-state-next row-state)]
+    (prn "south" (gr/get-neighbour-at grid (first row) :south))
+    (if (nil? (gr/get-neighbour-at grid (first row) :south)) ;; just checking if it's the final row?
+      [grid next-row-state]
+      (reduce link-south [grid row-state] (row-state-each-set row-state)))))
+
+(defn process-row
+  [grid-state row]
+  {:pre [(s/valid? ::spec/eller-grid-state? grid-state)
+         (s/valid? ::spec/cell-list? row)]
+   :post [(s/valid? ::spec/eller-grid-state? %)]}
+  (prn "process-row state" (second grid-state))
+  (prn "process-row row" row)
+  (-> grid-state
+      (link-row row)
+      (link-southern-bit row)))
+
+(defn eller
+  [grid]
+  {:pre [(s/valid? ::spec/grid? grid)]
+   :post [(s/valid? ::spec/grid? %)]}
+  (first (reduce process-row [grid (make-row-state)] (reverse (gr/iter-rows grid)))))
