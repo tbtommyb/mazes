@@ -90,6 +90,12 @@ mazes.core> (pr/png-out maze "polar-maze-distances.png" {:distances distances})
 
 - [x] Weaving
 - [ ] Braiding breaks longest path
+- [ ] Refactor messy bits of code, especially in algorithms
+- [ ] Add more tests
+- [ ] Add docstrings
+- [ ] Try switching grid to protocols
+- [ ] Try creating a web page using reagent
+- [ ] Profile performance and see what optimisations can be made
 
 ## License
 
