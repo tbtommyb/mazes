@@ -81,7 +81,7 @@
     (if (not (pos-int? unvisited))
       maze
       (let [neighbour (utils/safe-rand-nth (gr/get-neighbouring-cells maze cell))]
-        (if (empty? (:links neighbour))
+        (if (not (cell/visited? neighbour))
           (recur
            (gr/link-cells maze cell neighbour)
            (dec unvisited)
@@ -184,11 +184,13 @@
   (let [winning-set (get-set-for-cell state left)
         losing-set (get-set-for-cell state right)
         losing-cells (or (get-in state [:cells-in-set losing-set]) (list right))]
-    (-> (reduce (fn [curr-state loser]
-                  (-> (update-in curr-state [:cells-in-set winning-set] #(cons loser %))
-                      (assoc-in [:set-for-cell loser] winning-set)))
-                state losing-cells)
-        (update :cells-in-set #(dissoc % losing-set)))))
+    (if (not (can-merge? state left right))
+      state
+      (-> (reduce (fn [curr-state loser]
+                    (-> (update-in curr-state [:cells-in-set winning-set] #(cons loser %))
+                        (assoc-in [:set-for-cell loser] winning-set)))
+                  state losing-cells)
+          (update :cells-in-set #(dissoc % losing-set))))))
 
 ;; TODO: woah there, horsey. Let's tidy this up
 ;; Refactor link-cells to take coords and fetch from grid itself
@@ -217,8 +219,8 @@
                         (gr/get-neighbour-at new-grid cell :south)
                         (gr/get-neighbour-at new-grid cell :north)
                         :north-north)
-           (gr/link-cells new-grid (gr/get-neighbour-at new-grid cell :west) cell)
-           (gr/link-cells new-grid cell (gr/get-neighbour-at new-grid cell :east)))
+           (gr/link-cells new-grid :west cell)
+           (gr/link-cells new-grid cell :east))
          (-> (update-in state [:neighbours] #(remove (partial utils/coll-contains? (cell/coords cell)) %))
              (kruskal-merge (get-neighbour :west) coord)
              (kruskal-merge coord (get-neighbour :east))
@@ -232,8 +234,8 @@
                         (gr/get-neighbour-at new-grid cell :west)
                         (gr/get-neighbour-at new-grid cell :east)
                         :east-east)
-           (gr/link-cells new-grid (gr/get-neighbour-at new-grid cell :north) cell)
-           (gr/link-cells new-grid cell (gr/get-neighbour-at new-grid cell :south)))
+           (gr/link-cells new-grid :north cell)
+           (gr/link-cells new-grid cell :south))
          (-> (update-in state [:neighbours] #(remove (partial utils/coll-contains? (cell/coords cell)) %))
              (kruskal-merge (get-neighbour :north) coord)
              (kruskal-merge coord (get-neighbour :south))
@@ -278,7 +280,7 @@
   (let [init-state (kruskal-state grid)]
     (first (reduce (fn [[maze curr-state] [left right]]
                      (if (can-merge? curr-state left right)
-                       [(gr/link-cells maze (gr/get-cell maze left) (gr/get-cell maze right))
+                       [(gr/link-cells maze left right)
                         (kruskal-merge curr-state left right)]
                        [maze curr-state])) [grid init-state] (gen/shuffle (:neighbours init-state))))))
 
@@ -292,7 +294,7 @@
         grid-state (add-random-crossings grid init-state)]
     (first (reduce (fn [[maze curr-state] [left right]]
                      (if (can-merge? curr-state left right)
-                       [(gr/link-cells maze (gr/get-cell maze left) (gr/get-cell maze right))
+                       [(gr/link-cells maze left right)
                         (kruskal-merge curr-state left right)]
                        [maze curr-state])) grid-state (gen/shuffle (:neighbours (second grid-state)))))))
 
@@ -337,7 +339,7 @@
           (if (empty? available-neighbours)
             (recur curr-grid (remove #{coord} active-coords))
             (let [neighbour-coord (apply min-key #(get costs %) available-neighbours)]
-              (recur (gr/link-cells curr-grid (gr/get-cell curr-grid coord) (gr/get-cell curr-grid neighbour-coord))
+              (recur (gr/link-cells curr-grid coord neighbour-coord)
                      (cons neighbour-coord active-coords)))))))))
 
 (defn growing-tree
@@ -359,7 +361,7 @@
               neighbour (utils/safe-rand-nth available-neighbours)]
           (if (nil? neighbour)
             (recur curr-grid (remove #{coord} active-coords))
-            (recur (gr/link-cells curr-grid (gr/get-cell curr-grid coord) (gr/get-cell curr-grid neighbour))
+            (recur (gr/link-cells curr-grid coord neighbour)
                    (cons neighbour active-coords))))))))
 
 (defn- make-row-state

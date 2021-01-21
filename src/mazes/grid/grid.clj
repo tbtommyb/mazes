@@ -76,9 +76,9 @@
 (defn get-cell-helper
   "Return the cell located in `grid` at `coord`"
   [grid coord]
-  ;; {:pre [(s/valid? (s/nilable ::spec/coords) coord)
-  ;;        (s/valid? ::spec/grid? grid)]
-  ;;  :post [(s/valid? (s/nilable ::spec/cell?) %)]}
+  {:pre [(s/valid? (s/nilable ::spec/coords) coord)
+         (s/valid? ::spec/grid? grid)]
+   :post [(s/valid? (s/nilable ::spec/cell?) %)]}
   (when-let [cell-body (get-in grid [:cells coord])]
     (cell/make coord cell-body)))
 
@@ -93,8 +93,8 @@
 (defn iter-grid
   "Iterate through `grid` by column, returning each accessible cell"
   [grid & [opt]]
-  ;; {:pre [(s/valid? ::spec/grid? grid)]
-  ;;  :post [(s/valid? ::spec/cell-list? %)]}
+  {:pre [(s/valid? ::spec/grid? grid)]
+   :post [(s/valid? ::spec/cell-list? %)]}
   (let [getter (if (:ignore-mask opt) get-cell-helper get-cell)]
     (keep (partial getter grid)
           (sort-by (juxt first last) (keys (:cells grid))))))
@@ -131,7 +131,9 @@
 
 (defn add-link
   [grid src dest dir]
-  (update-in grid [:cells (cell/coords src) :links dir] #(conj % (cell/coords dest))))
+  (update-in grid
+             [:cells (cell/coords src) :links dir]
+             #(conj % (cell/coords dest))))
 
 ;; TODO so gross
 (defn remove-link
@@ -147,20 +149,32 @@
    (-> (remove-link grid src dest)
        (remove-link dest src))))
 
-(defn link-cells
+(defn link-cells-helper
   "Record a link in `grid` from `src` to `dest` if they are neighbours. Default bidirectional"
+  [grid src dest bidirectional]
+  {:pre [(s/valid? ::spec/grid? grid)
+         (s/valid? ::spec/cell? src)
+         (s/valid? ::spec/cell? dest)
+         (s/valid? boolean? bidirectional)]
+   :post [(s/valid? ::spec/grid? grid)]}
+  (let [direction (direction-between-cells grid src dest)
+        reverse (direction-between-cells grid dest src)]
+    (cond-> grid
+      (some? direction) (add-link src dest direction)
+      (and bidirectional (some? reverse)) (add-link dest src reverse))))
+
+(defn link-cells
   ([grid src dest] (link-cells grid src dest true))
   ([grid src dest bidirectional]
-   {:pre [(s/valid? ::spec/grid? grid)
-          (s/valid? ::spec/cell? src)
-          (s/valid? ::spec/cell? dest)
-          (s/valid? boolean? bidirectional)]
-    :post [(s/valid? ::spec/grid? grid)]}
-   (let [direction (direction-between-cells grid src dest)
-         reverse (direction-between-cells grid dest src)]
-     (cond-> grid
-       (some? direction) (add-link src dest direction)
-       (and bidirectional (some? reverse)) (add-link dest src reverse)))))
+   (let [src-cell (cond
+                    (s/valid? ::spec/direction? src) (get-neighbour-at grid dest src)
+                    (s/valid? ::spec/coords src) (get-cell grid src)
+                    :else src)
+         dest-cell (cond
+                     (s/valid? ::spec/direction? dest) (get-neighbour-at grid src dest)
+                     (s/valid? ::spec/coords dest) (get-cell grid dest)
+                     :else dest)]
+     (link-cells-helper grid src-cell dest-cell bidirectional))))
 
 (defn get-unlinked-neighbours
   [grid cell]

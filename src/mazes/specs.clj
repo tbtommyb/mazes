@@ -15,6 +15,9 @@
 (s/def ::cartesian-direction? #(contains? cartesian-dirs %))
 (s/def ::polar-direction? #(contains? polar-dirs %))
 (s/def ::weave-direction? #(contains? weave-dirs %))
+(s/def ::direction? (s/or :polar ::polar-direction?
+                          :weave ::weave-direction?
+                          :cartesian ::cartesian-direction?))
 (s/def ::rows pos-int?)
 (s/def ::cols pos-int?)
 (s/def ::cells map?)
