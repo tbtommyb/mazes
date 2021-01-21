@@ -1,5 +1,6 @@
 (ns mazes.grid.grid
   (:require
+   [clojure.data.generators :as gen]
    [mazes.cell.cell :as cell]
    [mazes.utils :as utils]
    [mazes.specs :as spec]
@@ -178,7 +179,7 @@
   [grid & [opt]]
   (let [p (:p opt 1.0)]
     (loop [maze grid
-           dead-ends (shuffle (filter cell/dead-end? (iter-grid maze)))]
+           dead-ends (gen/shuffle (filter cell/dead-end? (iter-grid maze)))]
       (if (empty? dead-ends)
         maze
         (if (> (rand) p)

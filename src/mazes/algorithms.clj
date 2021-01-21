@@ -8,7 +8,8 @@
    [mazes.grid.grid :as gr]))
 
 (defn binary-tree
-  "Generate links in `grid` using a binary tree algorithm"
+  "Generate links in `grid` using a binary tree algorithm.
+  Starting from the south west corner, it links randomly to the east or north."
   [grid]
   {:pre [(s/valid? ::spec/grid? grid)]
    :post [(s/valid? ::spec/grid? %)]}
@@ -18,7 +19,7 @@
           grid
           (gr/iter-grid grid)))
 
-(defn link-random-north
+(defn- link-random-north
   "Link a random cell in `run` to the north"
   [grid run]
   (let [random-cell (utils/safe-rand-nth run)]
@@ -26,14 +27,14 @@
       (gr/link-cells grid random-cell northern-neighbour)
       grid)))
 
-(defn link-run
+(defn- link-run
   "Link every coord in `run` into `grid`"
   [grid run]
   (reduce (fn [grid [fst snd]] (gr/link-cells grid fst snd))
           grid
           (partition 2 1 run)))
 
-(defn connect-run
+(defn- connect-run
   "Link `run` into `grid` and add a random northern link"
   [grid run]
   {:pre [(s/valid? ::spec/grid? grid)
@@ -43,7 +44,7 @@
       (link-random-north run)
       (link-run run)))
 
-(defn should-close-out?
+(defn- should-close-out?
   "Decide whether `cell` should close the current run"
   [grid cell]
   {:pre [(s/valid? ::spec/grid? grid)
@@ -51,7 +52,7 @@
   (and (not-empty (gr/get-neighbouring-cells grid cell '(:north)))
        (even? (gen/rand-nth '(0 1)))))
 
-(defn generate-runs
+(defn- generate-runs
   "Create randomly sized runs of cells from `row`"
   [grid row]
   {:pre [(s/valid? ::spec/grid? grid)
@@ -60,7 +61,8 @@
   (partition-by #(should-close-out? grid %) row))
 
 (defn sidewinder
-  "Generate links in `grid` using a sidewinder algorithm"
+  "Generate links in `grid` using the Sidewinder algorithm.
+  Rows are connected into randomly-size runs that are then connected vertically."
   [grid]
   {:pre [(s/valid? ::spec/grid? grid)]
    :post [(s/valid? ::spec/grid? %)]}
@@ -68,7 +70,8 @@
     (reduce connect-run grid runs)))
 
 (defn aldous-broder
-  "Generate links in `grid` using Aldous-Broder algorithm"
+  "Generate links in `grid` using Aldous-Broder algorithm.
+  Randomly adds connected neighbours."
   [grid]
   {:pre [(s/valid? ::spec/grid? grid)]
    :post [(s/valid? ::spec/grid? %)]}
@@ -85,7 +88,7 @@
            neighbour)
           (recur maze unvisited neighbour))))))
 
-(defn walk-loop-erased-path
+(defn- walk-loop-erased-path
   [grid cell unvisited]
   {:pre [(s/valid? ::spec/grid? grid)
          (s/valid? ::spec/cell? cell)
@@ -103,7 +106,8 @@
              (cons curr path)))))))
 
 (defn wilson
-  "Generate links in `grid` using Wilson's algorithm"
+  "Generate links in `grid` using Wilson's algorithm.
+  Chooses random cell and performs loop erased walk until it finds connected cells."
   [grid]
   {:pre [(s/valid? ::spec/grid? grid)]
    :post [(s/valid? ::spec/grid? %)]}
@@ -118,7 +122,7 @@
                remaining-unvisited
                (utils/safe-rand-nth remaining-unvisited))))))
 
-(defn hunt-for-cell
+(defn- hunt-for-cell
   [grid]
   (->> grid
       gr/iter-grid
@@ -127,7 +131,8 @@
       first))
 
 (defn hunt-and-kill
-  "Generate links in `grid` using the hunt and kill algorithm"
+  "Generate links in `grid` using the hunt and kill algorithm.
+  Carve via random walk and then hunt for adjacent, unvisited cells."
   [grid]
   {:pre [(s/valid? ::spec/grid? grid)]
    :post [(s/valid? ::spec/grid? %)]}
@@ -145,7 +150,8 @@
           maze)))))
 
 (defn recursive-backtracker
-  "Generate links in `grid` using the recursive backtracking algorithm"
+  "Generate links in `grid` using the recursive backtracking algorithm.
+  Basically depth-first search."
   [grid]
   {:pre [(s/valid? ::spec/grid? grid)]
    :post [(s/valid? ::spec/grid? %)]}
@@ -158,12 +164,12 @@
         (recur maze (rest visited)))
       maze)))
 
-(defn get-set-for-cell
+(defn- get-set-for-cell
   [state coord]
   {:pre [(s/valid? ::spec/coords coord)]}
   (get-in state [:set-for-cell coord]))
 
-(defn can-merge?
+(defn- can-merge?
   [state left right]
   {:pre [(s/valid? (s/nilable ::spec/coords) left)
          (s/valid? (s/nilable ::spec/coords) right)]}
@@ -171,7 +177,7 @@
             (not (nil? right)))
        (not= (get-set-for-cell state left) (get-set-for-cell state right))))
 
-(defn kruskal-merge
+(defn- kruskal-merge
   [state left right]
   {:pre [(s/valid? ::spec/coords left)
          (s/valid? ::spec/coords right)]}
@@ -186,7 +192,7 @@
 
 ;; TODO: woah there, horsey. Let's tidy this up
 ;; Refactor link-cells to take coords and fetch from grid itself
-(defn kruskal-add-crossing
+(defn- kruskal-add-crossing
   [[grid state] coord]
   {:pre [(s/valid? ::spec/coords coord)]}
   (let [cell (gr/get-cell grid coord)
@@ -233,8 +239,9 @@
              (kruskal-merge coord (get-neighbour :south))
              (kruskal-merge (get-neighbour :west) (get-neighbour :east)))]))))
 
-(defn kruskal-state
+(defn- kruskal-state
   [grid]
+  {:pre [(s/valid? ::spec/grid? grid)]}
   (let [initial {:neighbours '() :set-for-cell {} :cells-in-set {}}
         add-neighbour (fn [state cell dir]
                         (if-let [neighbour (gr/get-neighbour-at grid cell dir)]
@@ -250,39 +257,51 @@
             initial
             (gr/iter-grid grid))))
 
-(defn add-random-crossings
+(defn- add-random-crossings
   [grid state]
   (let [size (gr/size grid)]
     (loop [curr 1
            grid-state [grid state]]
       (if (= curr size)
         grid-state
-        (let [row (int (rand (- (:rows grid) 2)))
-              col (int (rand (- (:cols grid) 2)))]
+        (let [row (gen/uniform 0 (- (:rows grid) 2))
+              col (gen/uniform 0 (- (:cols grid) 2))]
           (recur (inc curr)
                  (kruskal-add-crossing grid-state [col row])))))))
 
 (defn simple-kruskal
+  "Generate links in `grid` using Kruskal's algorithm.
+  Creates a minimum spanning tree using randomised neighbours."
   [grid]
+  {:pre [(s/valid? ::spec/grid? grid)]
+   :post [(s/valid? ::spec/grid? %)]}
   (let [init-state (kruskal-state grid)]
     (first (reduce (fn [[maze curr-state] [left right]]
                      (if (can-merge? curr-state left right)
                        [(gr/link-cells maze (gr/get-cell maze left) (gr/get-cell maze right))
                         (kruskal-merge curr-state left right)]
-                       [maze curr-state])) [grid init-state] (shuffle (:neighbours init-state))))))
+                       [maze curr-state])) [grid init-state] (gen/shuffle (:neighbours init-state))))))
 
 (defn randomised-kruskal
+  "Generate links in `grid` using a randomised Kruskal's algorithm.
+  It adds crossings to guarantee weaving."
   [grid]
+  {:pre [(s/valid? ::spec/grid? grid)]
+   :post [(s/valid? ::spec/grid? %)]}
   (let [init-state (kruskal-state grid)
         grid-state (add-random-crossings grid init-state)]
     (first (reduce (fn [[maze curr-state] [left right]]
                      (if (can-merge? curr-state left right)
                        [(gr/link-cells maze (gr/get-cell maze left) (gr/get-cell maze right))
                         (kruskal-merge curr-state left right)]
-                       [maze curr-state])) grid-state (shuffle (:neighbours (second grid-state)))))))
+                       [maze curr-state])) grid-state (gen/shuffle (:neighbours (second grid-state)))))))
 
 (defn simplified-prims
+  "Generate links in `grid` using a simplified Prim's algorithm.
+  It spreads randomly from an initial seed set with uniform costs."
   [grid & [opt]]
+  {:pre [(s/valid? ::spec/grid? grid)]
+   :post [(s/valid? ::spec/grid? %)]}
   (let [start (or (gr/get-cell grid (:start opt))
                   (utils/safe-rand-nth (gr/iter-grid grid)))]
     (loop [curr-grid grid
@@ -299,10 +318,14 @@
                    (cons neighbour active-cells))))))))
 
 (defn true-prims
+  "Generate links in `grid` using Prim's algorithm.
+  It randomises costs and spreads based on least cost."
   [grid & [opt]]
+  {:pre [(s/valid? ::spec/grid? grid)]
+   :post [(s/valid? ::spec/grid? %)]}
   (let [start (or (:start opt)
                   (utils/safe-rand-nth (map cell/coords (gr/iter-grid grid))))
-        costs (reduce #(assoc %1 %2 (rand 100)) {} (map cell/coords (gr/iter-grid grid)))]
+        costs (reduce #(assoc %1 %2 (gen/uniform 0 100)) {} (map cell/coords (gr/iter-grid grid)))]
     (loop [curr-grid grid
            active-coords (list start)]
       (if (empty? active-coords)
@@ -318,7 +341,11 @@
                      (cons neighbour-coord active-coords)))))))))
 
 (defn growing-tree
+  "Generate links in `grid` using growing tree algorithm.
+  It accepts a function `f` to select the next cell from active list."
   [grid f & [opt]]
+  {:pre [(s/valid? ::spec/grid? grid)]
+   :post [(s/valid? ::spec/grid? %)]}
   (let [start (or (:start opt)
                   (utils/safe-rand-nth (map cell/coords (gr/iter-grid grid))))]
     (loop [curr-grid grid
@@ -335,15 +362,14 @@
             (recur (gr/link-cells curr-grid (gr/get-cell curr-grid coord) (gr/get-cell curr-grid neighbour))
                    (cons neighbour active-coords))))))))
 
-;; Eller's algorithm
-(defn make-row-state
+(defn- make-row-state
   ([] (make-row-state 0))
   ([starting-set]
    {:cells-in-set {}
     :set-for-cell {}
     :next-set starting-set}))
 
-(defn row-state-record
+(defn- row-state-record
   [state set-id cell]
   {:pre [(s/valid? ::spec/eller-state? state)
          (s/valid? ::spec/next-set set-id)
@@ -353,7 +379,7 @@
       (assoc-in [:set-for-cell (cell/get-x cell)] set-id)
       (update-in [:cells-in-set set-id] #(conj % (cell/coords cell)))))
 
-(defn row-state-increment-cell
+(defn- row-state-increment-cell
   [state cell]
   {:pre [(s/valid? ::spec/eller-state? state)
          (s/valid? ::spec/cell? cell)]
@@ -361,14 +387,14 @@
   (-> (row-state-record state (:next-set state) cell)
       (update :next-set inc)))
 
-(defn get-cell-set
+(defn- get-cell-set
   [state cell]
   {:pre [(s/valid? ::spec/eller-state? state)
          (s/valid? ::spec/cell? cell)]
    :post [(s/valid? (s/nilable ::spec/next-set) %)]}
   (get-in state [:set-for-cell (cell/get-x cell)]))
 
-(defn row-state-set-for
+(defn- row-state-set-for
   [state cell]
   {:pre [(s/valid? ::spec/eller-state? state)
          (s/valid? ::spec/cell? cell)]
@@ -379,7 +405,7 @@
     (let [new-state (row-state-increment-cell state cell)]
       [new-state (get-cell-set new-state cell)])))
 
-(defn row-state-merge
+(defn- row-state-merge
   [state winner loser]
   {:pre [(s/valid? ::spec/eller-state? state)
          (s/valid? ::spec/next-set winner)
@@ -392,28 +418,27 @@
             (get-in state [:cells-in-set loser]))
       (update :cells-in-set #(dissoc % loser))))
 
-(defn row-state-next
+(defn- row-state-next
   [state]
   {:pre [(s/valid? ::spec/eller-state? state)]
    :post [(s/valid? ::spec/eller-state? %)]}
   (make-row-state (:next-set state)))
 
-(defn row-state-each-set
+(defn- row-state-each-set
   [state]
   {:pre [(s/valid? ::spec/eller-state? state)]}
   (map identity (:cells-in-set state)))
 
-(defn should-link?
+(defn- should-link?
   [grid left-set right-set cell]
   {:pre [(s/valid? ::spec/next-set left-set)
          (s/valid? ::spec/next-set right-set)
          (s/valid? ::spec/cell? cell)]}
   (and (not= left-set right-set)
        (or (nil? (gr/get-neighbour-at grid cell :south))
-           (= (rand-int 2) 0))))
+           (= (gen/uniform 0 2) 0))))
 
-;; TODO - monads?
-(defn current-and-prior-set
+(defn- current-and-prior-set
   [state cell west]
   {:pre [(s/valid? ::spec/eller-state? state)
          (s/valid? ::spec/cell? cell)
@@ -425,7 +450,7 @@
         [newer-state prior-set] (row-state-set-for new-state west)]
     [newer-state curr-set prior-set]))
 
-(defn link-row-horizontally
+(defn- link-row-horizontally
   [grid-state row]
   {:pre [(s/valid? ::spec/eller-grid-state? grid-state)
          (s/valid? ::spec/cell-list? row)]
@@ -439,10 +464,10 @@
                   [curr-grid latest-row-state]))
               [curr-grid curr-row-state])) grid-state row))
 
-(defn make-southern-connections
+(defn- make-southern-connections
   [[grid row-state next-row-state] [set-id coord-list]]
   (reduce (fn [[curr-grid curr-row-state curr-next-row-state] [idx coord]]
-            (if (or (= 0 idx) (= 0 (rand-int 3)))
+            (if (or (= 0 idx) (= 0 (gen/uniform 0 3)))
               (let [cell (gr/get-cell curr-grid coord)
                     southern (gr/get-neighbour-at curr-grid cell :south)
                     [latest-row-state cell-set] (row-state-set-for curr-row-state cell)]
@@ -451,9 +476,9 @@
                  (row-state-record curr-next-row-state cell-set southern)])
               [curr-grid curr-row-state curr-next-row-state]))
           [grid row-state next-row-state]
-          (map-indexed list (shuffle coord-list))))
+          (map-indexed list (gen/shuffle coord-list))))
 
-(defn link-to-south
+(defn- link-to-south
   [grid-state row]
   {:pre [(s/valid? ::spec/eller-grid-state? grid-state)
          (s/valid? ::spec/cell-list? row)]
@@ -467,7 +492,7 @@
                   (row-state-each-set row-state))
           (mapv [0 2])))))
 
-(defn process-row
+(defn- process-row
   [grid-state row]
   {:pre [(s/valid? ::spec/eller-grid-state? grid-state)
          (s/valid? ::spec/cell-list? row)]
@@ -477,25 +502,38 @@
       (link-to-south row)))
 
 (defn eller
+  "Generate links in `grid` using Eller's algorithm.
+  It links rows into runs and then connects runs to the south."
   [grid]
   {:pre [(s/valid? ::spec/grid? grid)]
    :post [(s/valid? ::spec/grid? %)]}
   (first (reduce process-row [grid (make-row-state) nil] (reverse (gr/iter-rows grid)))))
 
-(defn link-all-cell-neighbours
+(defn- link-all-cell-neighbours
   [grid cell]
+  {:pre [(s/valid? ::spec/grid? grid)
+         (s/valid? ::spec/cell? cell)]
+   :post [(s/valid? ::spec/grid? %)]}
   (reduce #(gr/link-cells %1 cell %2 false) grid (gr/get-neighbouring-cells grid cell)))
 
-(defn link-every-cell
+(defn- link-every-cell
   [grid]
+  {:pre [(s/valid? ::spec/grid? grid)]
+   :post [(s/valid? ::spec/grid? %)]}
   (reduce link-all-cell-neighbours grid (gr/iter-grid grid)))
 
 (declare divide-grid)
 
-(defn divide-grid-horizontally
-  [grid row col height width]
+(defn- divide-grid-horizontally
+  [grid row col height width room-p]
+  {:pre [(s/valid? ::spec/grid? grid)
+         (s/valid? int? row)
+         (s/valid? int? col)
+         (s/valid? int? height)
+         (s/valid? int? width)]
+   :post [(s/valid? ::spec/grid? %)]}
   (let [divide-south-of (utils/safe-rand-nth (range 1 height))
-        passage-at (rand-int width)
+        passage-at (gen/uniform 0 width)
         unlink-cell (fn [curr-grid n]
                       (if (= passage-at n)
                         curr-grid
@@ -504,13 +542,19 @@
                               neighbour (gr/get-neighbour-at curr-grid cell :south)]
                           (gr/unlink-cells curr-grid cell neighbour))))]
     (-> (reduce unlink-cell grid (range width))
-        (divide-grid row col divide-south-of width)
-        (divide-grid (+ row divide-south-of) col (- height divide-south-of) width))))
+        (divide-grid row col divide-south-of width room-p)
+        (divide-grid (+ row divide-south-of) col (- height divide-south-of) width room-p))))
 
-(defn divide-grid-vertically
-  [grid row col height width]
-  (let [divide-east-of (rand-int (dec width))
-        passage-at (rand-int height)
+(defn- divide-grid-vertically
+  [grid row col height width room-p]
+  {:pre [(s/valid? ::spec/grid? grid)
+         (s/valid? int? row)
+         (s/valid? int? col)
+         (s/valid? int? height)
+         (s/valid? int? width)]
+   :post [(s/valid? ::spec/grid? %)]}
+  (let [divide-east-of (gen/uniform 0 (dec width))
+        passage-at (gen/uniform 0 height)
         unlink-cell (fn [curr-grid n]
                       (if (= passage-at n)
                         curr-grid
@@ -519,20 +563,31 @@
                               neighbour (gr/get-neighbour-at curr-grid cell :east)]
                           (gr/unlink-cells curr-grid cell neighbour))))]
     (-> (reduce unlink-cell grid (range height))
-        (divide-grid row col height (inc divide-east-of))
-        (divide-grid row (+ col 1 divide-east-of) height (- width divide-east-of 1)))))
+        (divide-grid row col height (inc divide-east-of) room-p)
+        (divide-grid row (+ col 1 divide-east-of) height (- width divide-east-of 1) room-p))))
 
-(defn divide-grid
-  [grid row col height width & [src]]
-  (if (or (<= height 1) (<= width 1))
+(defn- divide-grid
+  [grid row col height width room-p]
+  {:pre [(s/valid? ::spec/grid? grid)
+         (s/valid? int? row)
+         (s/valid? int? col)
+         (s/valid? int? height)
+         (s/valid? int? width)]
+   :post [(s/valid? ::spec/grid? %)]}
+  (if (or (<= height 1)
+          (<= width 1)
+          (and (< height 5) (< width 5) (< (gen/double) room-p)))
     grid
     (if (> height width)
-      (divide-grid-horizontally grid row col height width)
-      (divide-grid-vertically grid row col height width))))
+      (divide-grid-horizontally grid row col height width room-p)
+      (divide-grid-vertically grid row col height width room-p))))
 
 (defn recursive-division
-  [grid]
-  {:pre [(s/valid? ::spec/grid? grid)]
+  "Generate links in `grid` using recursive division algorithm.
+  Optional :room-p option (0.0 - 1.0) determines probability of rooms."
+  [grid & [opt]]
+  {:pre [(s/valid? ::spec/grid? grid)
+         (s/valid? ::spec/can-fit-room? [grid opt])]
    :post [(s/valid? ::spec/grid? %)]}
   (-> (link-every-cell grid)
-      (divide-grid 0 0 (:rows grid) (:cols grid))))
+      (divide-grid 0 0 (:rows grid) (:cols grid) (:room-p opt 0))))

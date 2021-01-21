@@ -12,20 +12,24 @@
    [mazes.algorithms :as algo]
    [mazes.utils :as utils]))
 
-;; (def maze (-> (weave/new-grid 30 30)
-;;               (algo/recursive-backtracker)))
-;; (pr/png-out maze "images/1-weave.png" {:inset 0.1})
+;; (def grid (grid/new-grid 6 6))
+;; (def maze (algo/recursive-division grid {:room-p 0.1}))
 
-;; (def square (-> (grid/new-grid 30 30)
-;;               (algo/recursive-backtracker)))
-;; (pr/png-out square "images/1-grid.png" {:inset 0.1})
+;; (pr/png-out maze "images/room-test.png")
 
-;; (def polar (-> (polar/new-grid 10)
-;;               (algo/recursive-backtracker)))
-;; (pr/png-out polar "images/1-polar.png")
-;; (pr/png-out square "images/weave-none.png")
-;; (pr/png-out square "images/weave.png" {:inset 0.1})
-;; (def masked (algo/hunt-and-kill (masked/new-grid "mask.txt")))
-;; (def masked-distances (dist/dijkstra masked [3 3]))
-;; (pr/png-out masked "images/masked-maze-distances.png" {:distances masked-distances})
-;; (pr/png-out masked "images/masked-maze.png")
+;; (def random (algo/growing-tree grid (comp first shuffle) {:start [5 5]}))
+;; (pr/png-out random "images/growing-tree-random.png"
+;;             {:distances (dist/dijkstra random [5 5])})
+
+;; (def first-cell (algo/growing-tree grid first {:start [5 5]}))
+;; (pr/png-out first-cell "images/growing-tree-first.png"
+;;             {:distances (dist/dijkstra first-cell [5 5])})
+
+;; (def rb (algo/recursive-backtracker grid))
+;; (pr/png-out rb "images/growing-recursive.png"
+;;             {:distances (dist/dijkstra rb [0 0])})
+;; (def mixed (algo/growing-tree grid #(if (< (rand-int 9) 5)
+;;                                       (utils/safe-rand-nth %)
+;;                                       (first %)) {:start [5 5]}))
+;; (pr/png-out mixed "images/growing-tree-mixed.png"
+;;             {:distances (dist/dijkstra mixed [5 5])})

@@ -41,3 +41,9 @@
 (s/def ::eller-grid-state? (fn [[grid state & args]]
                              (and (s/valid? ::grid? grid)
                                   (s/valid? ::eller-state? state))))
+
+(s/def ::can-fit-room? (fn [[grid opt]]
+                         (or (zero? (:room-p opt 0))
+                             (and (> (:room-p opt) 0)
+                                  (> (:rows grid) 5)
+                                  (> (:cols grid) 5)))))
